@@ -8,12 +8,17 @@ import '../../core/theme/fuwa_colors.dart';
 import '../../data/database/database_helper.dart';
 import '../../data/models/accessory.dart';
 
-/// 全屏录入搭配饰品页面 (`AddAccessoryScreen`)
+/// 全屏录入/修改搭配饰品页面 (`AddAccessoryScreen`)
 /// 统一规范全屏从容排版，去除突兀黑边，纯白微粉柔光卡片与深棕文字
 class AddAccessoryScreen extends StatefulWidget {
+  final Accessory? accessoryToEdit; // 传入已有饰品则为修改编辑模式
   final VoidCallback? onAdded;
 
-  const AddAccessoryScreen({super.key, this.onAdded});
+  const AddAccessoryScreen({
+    super.key,
+    this.accessoryToEdit,
+    this.onAdded,
+  });
 
   @override
   State<AddAccessoryScreen> createState() => _AddAccessoryScreenState();
@@ -40,6 +45,35 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
   bool _hasPaidBalance = false;
 
   @override
+  void initState() {
+    super.initState();
+    _initDefaults();
+  }
+
+  void _initDefaults() {
+    if (widget.accessoryToEdit != null) {
+      final acc = widget.accessoryToEdit!;
+      _nameCtrl.text = acc.name;
+      _selectedType = acc.accessoryType;
+      _imagePath = acc.imagePath;
+      _isDepositType = acc.isDepositType;
+      if (acc.isDepositType) {
+        _depositPriceCtrl.text = acc.depositPrice > 0 ? acc.depositPrice.toStringAsFixed(0) : '';
+        _date = acc.depositDate ?? DateFormat('yyyy-MM-dd').format(DateTime.now());
+        _expectedDate = acc.expectedDate;
+        _hasPaidBalance = acc.isCompletedBalance;
+        if (acc.isCompletedBalance) {
+          _balancePriceCtrl.text = acc.balancePrice > 0 ? acc.balancePrice.toStringAsFixed(0) : '';
+          _balanceDate = acc.balanceDate;
+        }
+      } else {
+        _fullPriceCtrl.text = acc.fullPrice > 0 ? acc.fullPrice.toStringAsFixed(0) : (acc.price > 0 ? acc.price.toStringAsFixed(0) : '');
+        _date = acc.depositDate ?? DateFormat('yyyy-MM-dd').format(DateTime.now());
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _nameCtrl.dispose();
     _fullPriceCtrl.dispose();
@@ -61,6 +95,8 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditMode = widget.accessoryToEdit != null;
+
     return Scaffold(
       backgroundColor: FuwaColors.creamWhite,
       appBar: AppBar(
@@ -69,11 +105,11 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.close_rounded, color: FuwaColors.chocolateDark),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context, false),
         ),
-        title: const Text(
-          '添置新饰品 ୨୧',
-          style: TextStyle(
+        title: Text(
+          isEditMode ? '修改饰品档案 ୨୧' : '添置新饰品 ୨୧',
+          style: const TextStyle(
             color: FuwaColors.chocolateDark,
             fontSize: 18,
             fontWeight: FontWeight.w800,
@@ -95,7 +131,7 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
           ),
         ),
       ),
-      bottomSheet: _buildBottomSaveBar(),
+      bottomSheet: _buildBottomSaveBar(isEditMode),
     );
   }
 
@@ -368,7 +404,7 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
     );
   }
 
-  Widget _buildBottomSaveBar() {
+  Widget _buildBottomSaveBar(bool isEditMode) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
@@ -386,12 +422,15 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
           ),
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(FuwaColors.ribbonSymbol, style: TextStyle(color: Colors.white, fontSize: 16)),
-              SizedBox(width: 8),
-              Text('收入小物箱 ୨୧', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+              const Text(FuwaColors.ribbonSymbol, style: TextStyle(color: Colors.white, fontSize: 16)),
+              const SizedBox(width: 8),
+              Text(
+                isEditMode ? '保存修改档案 ୨୧' : '收入小物箱 ୨୧',
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+              ),
             ],
           ),
         ),
@@ -540,6 +579,7 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
     final balancePrice = double.tryParse(_balancePriceCtrl.text.trim()) ?? 0.0;
 
     final acc = Accessory(
+      id: widget.accessoryToEdit?.id, // 保留原有 id
       name: _nameCtrl.text.trim(),
       imagePath: _imagePath,
       accessoryType: _selectedType,
@@ -552,14 +592,19 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
       expectedDate: _isDepositType ? _expectedDate : null,
     );
 
-    await _dbHelper.insertAccessory(acc);
+    if (widget.accessoryToEdit != null) {
+      await _dbHelper.updateAccessory(acc);
+    } else {
+      await _dbHelper.insertAccessory(acc);
+    }
+
     if (mounted) {
       widget.onAdded?.call();
-      Navigator.pop(context);
+      Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           backgroundColor: FuwaColors.balletPink,
-          content: Text('饰品已收入小物箱 ୨୧'),
+          content: Text(widget.accessoryToEdit != null ? '饰品档案已成功修改 ୨୧' : '饰品已收入小物箱 ୨୧'),
         ),
       );
     }

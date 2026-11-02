@@ -377,9 +377,29 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     ),
                   ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded, color: FuwaColors.mutedRosyBrown),
-                  onPressed: () => Navigator.pop(ctx),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, color: FuwaColors.chocolateDark, size: 20),
+                      onPressed: () async {
+                        Navigator.pop(ctx);
+                        final updated = await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute(
+                            fullscreenDialog: true,
+                            builder: (_) => AddWishlistScreen(itemToEdit: item),
+                          ),
+                        );
+                        if (updated == true && mounted) {
+                          _loadWishlist();
+                        }
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, color: FuwaColors.mutedRosyBrown),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
                 ),
               ],
             ),

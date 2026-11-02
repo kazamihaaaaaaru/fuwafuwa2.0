@@ -1,3 +1,4 @@
+import 'add_accessory_screen.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart';
@@ -30,6 +31,32 @@ class LolitaScreen extends StatefulWidget {
   @override
   State<LolitaScreen> createState() => _LolitaScreenState();
 }
+
+
+  Future<void> _confirmDeleteAccessory(Accessory acc) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: FuwaColors.pureWhite,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('移除饰品？', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w700)),
+        content: Text('确定要将「${acc.name}」从小物箱中删除吗？与裙装的搭配关联将自动解除。', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 13)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('保留', style: TextStyle(color: FuwaColors.mutedRosyBrown))),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: FuwaColors.balletPink, elevation: 0),
+            child: const Text('确认删除', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await _dbHelper.deleteAccessory(acc.id!);
+      _loadAccessories();
+    }
+  }
 
 class _LolitaScreenState extends State<LolitaScreen>
     with SingleTickerProviderStateMixin {
@@ -632,9 +659,36 @@ class _LolitaScreenState extends State<LolitaScreen>
                       ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, color: FuwaColors.mutedRosyBrown),
-                    onPressed: () => Navigator.pop(ctx),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined, color: FuwaColors.chocolateDark, size: 20),
+                        onPressed: () async {
+                          Navigator.pop(ctx);
+                          final updated = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(
+                              fullscreenDialog: true,
+                              builder: (_) => AddAccessoryScreen(accessoryToEdit: acc),
+                            ),
+                          );
+                          if (updated == true && mounted) {
+                            _loadAccessories();
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline_rounded, color: FuwaColors.balletPink, size: 20),
+                        onPressed: () async {
+                          Navigator.pop(ctx);
+                          _confirmDeleteAccessory(acc);
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, color: FuwaColors.mutedRosyBrown),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
                   ),
                 ],
               ),

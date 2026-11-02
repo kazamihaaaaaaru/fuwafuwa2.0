@@ -8,12 +8,17 @@ import '../../core/theme/fuwa_colors.dart';
 import '../../data/database/database_helper.dart';
 import '../../data/models/wishlist_item.dart';
 
-/// 全屏许愿新单品页面 (`AddWishlistScreen`)
+/// 全屏录入/修改心愿单页面 (`AddWishlistScreen`)
 /// 统一规范全屏从容排版，去除突兀黑边，纯白微粉柔光卡片与深棕文字
 class AddWishlistScreen extends StatefulWidget {
+  final WishlistItem? itemToEdit; // 传入已有心愿单单品则为修改编辑模式
   final VoidCallback? onAdded;
 
-  const AddWishlistScreen({super.key, this.onAdded});
+  const AddWishlistScreen({
+    super.key,
+    this.itemToEdit,
+    this.onAdded,
+  });
 
   @override
   State<AddWishlistScreen> createState() => _AddWishlistScreenState();
@@ -29,10 +34,29 @@ class _AddWishlistScreenState extends State<AddWishlistScreen> {
   final TextEditingController _budgetCtrl = TextEditingController();
   final TextEditingController _noteCtrl = TextEditingController();
 
-  String _desireLevel = AppConstants.desireLevels.first; // 默认 '非入不可 ♡'
+  String _desireLevel = AppConstants.desireLevels.first;
   String _releaseDate = DateFormat('yyyy-MM').format(DateTime.now());
   String? _imagePath;
   bool _isProcessingImage = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDefaults();
+  }
+
+  void _initDefaults() {
+    if (widget.itemToEdit != null) {
+      final it = widget.itemToEdit!;
+      _nameCtrl.text = it.name;
+      _shopCtrl.text = it.shopName ?? '';
+      _budgetCtrl.text = it.budgetPrice > 0 ? it.budgetPrice.toStringAsFixed(0) : '';
+      _noteCtrl.text = it.note ?? '';
+      _desireLevel = it.desireLevel;
+      _releaseDate = it.releaseDate ?? DateFormat('yyyy-MM').format(DateTime.now());
+      _imagePath = it.imagePath;
+    }
+  }
 
   @override
   void dispose() {
@@ -56,6 +80,8 @@ class _AddWishlistScreenState extends State<AddWishlistScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditMode = widget.itemToEdit != null;
+
     return Scaffold(
       backgroundColor: FuwaColors.creamWhite,
       appBar: AppBar(
@@ -64,11 +90,11 @@ class _AddWishlistScreenState extends State<AddWishlistScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.close_rounded, color: FuwaColors.chocolateDark),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context, false),
         ),
-        title: const Text(
-          '许愿新单品 ୨୧',
-          style: TextStyle(
+        title: Text(
+          isEditMode ? '修改心愿档案 ୨୧' : '许愿新单品 ୨୧',
+          style: const TextStyle(
             color: FuwaColors.chocolateDark,
             fontSize: 18,
             fontWeight: FontWeight.w800,
@@ -90,7 +116,7 @@ class _AddWishlistScreenState extends State<AddWishlistScreen> {
           ),
         ),
       ),
-      bottomSheet: _buildBottomSaveBar(),
+      bottomSheet: _buildBottomSaveBar(isEditMode),
     );
   }
 
@@ -248,7 +274,6 @@ class _AddWishlistScreenState extends State<AddWishlistScreen> {
           const SizedBox(height: 12),
           const Text('心动等级', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
-          // 纯净无黑边胶囊
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -323,7 +348,7 @@ class _AddWishlistScreenState extends State<AddWishlistScreen> {
     );
   }
 
-  Widget _buildBottomSaveBar() {
+  Widget _buildBottomSaveBar(bool isEditMode) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
@@ -341,12 +366,15 @@ class _AddWishlistScreenState extends State<AddWishlistScreen> {
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
           ),
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(FuwaColors.ribbonSymbol, style: TextStyle(color: Colors.white, fontSize: 16)),
-              SizedBox(width: 8),
-              Text('许愿收藏 ୨୧', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+              const Text(FuwaColors.ribbonSymbol, style: TextStyle(color: Colors.white, fontSize: 16)),
+              const SizedBox(width: 8),
+              Text(
+                isEditMode ? '保存修改心愿 ୨୧' : '许愿收藏 ୨୧',
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+              ),
             ],
           ),
         ),
@@ -430,6 +458,7 @@ class _AddWishlistScreenState extends State<AddWishlistScreen> {
     final budget = double.tryParse(_budgetCtrl.text.trim()) ?? 0.0;
 
     final item = WishlistItem(
+      id: widget.itemToEdit?.id, // 保留原有 id
       name: _nameCtrl.text.trim(),
       shopName: _shopCtrl.text.trim(),
       budgetPrice: budget,
@@ -437,17 +466,22 @@ class _AddWishlistScreenState extends State<AddWishlistScreen> {
       releaseDate: _releaseDate,
       desireLevel: _desireLevel,
       note: _noteCtrl.text.trim(),
-      createdDate: DateFormat('yyyy-MM-dd').format(DateTime.now()),
+      createdDate: widget.itemToEdit?.createdDate ?? DateFormat('yyyy-MM-dd').format(DateTime.now()),
     );
 
-    await _dbHelper.insertWishlistItem(item);
+    if (widget.itemToEdit != null) {
+      await _dbHelper.updateWishlistItem(item);
+    } else {
+      await _dbHelper.insertWishlistItem(item);
+    }
+
     if (mounted) {
       widget.onAdded?.call();
-      Navigator.pop(context);
+      Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           backgroundColor: FuwaColors.balletPink,
-          content: Text('心愿单已收藏 ୨୧'),
+          content: Text(widget.itemToEdit != null ? '心愿单档案已成功修改 ୨୧' : '心愿单已收藏 ୨୧'),
         ),
       );
     }

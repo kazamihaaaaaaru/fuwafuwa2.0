@@ -27,6 +27,21 @@ class ItemDetailScreen extends StatefulWidget {
 }
 
 class _ItemDetailScreenState extends State<ItemDetailScreen> {
+
+  Future<void> _editItem(Item item) async {
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => AddScreen(itemToEdit: item),
+      ),
+    );
+    if (updated == true && mounted) {
+      _loadItemDetail();
+      widget.onDataChanged?.call();
+    }
+  }
+
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   Item? _item;
@@ -147,6 +162,22 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         child: _buildBackButton(),
       ),
       actions: [
+        IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: FuwaColors.pureWhite.withOpacity(0.9),
+              shape: BoxShape.circle,
+              boxShadow: FuwaColors.softCardShadow,
+            ),
+            child: const Icon(
+              Icons.edit_outlined,
+              color: FuwaColors.chocolateDark,
+              size: 18,
+            ),
+          ),
+          onPressed: () => _editItem(item),
+        ),
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: IconButton(

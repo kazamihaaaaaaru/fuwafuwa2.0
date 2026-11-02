@@ -10,20 +10,23 @@ import '../../data/models/accessory.dart';
 import '../../data/models/item.dart';
 import '../../data/models/wishlist_item.dart';
 
-/// 模态页: 录入页面 (`AddScreen`)
+/// 模态页: 录入/编辑页面 (`AddScreen`)
 /// 严格遵循甘系（Sweet Lolita）视觉设计规范：
+/// - 支持单品录入与已有单品修改编辑（itemToEdit）
 /// - 支持服装尺码选择（XS/S/M/L/均码/手写其他）
 /// - 地球人与 Lolita 均支持记录【店铺/品牌】
 /// - 洋装子类目拆分裙撑与内搭，并包含 JK
 /// - 开关滑块纯白圆点配色，彻底去除生硬黑色
 class AddScreen extends StatefulWidget {
   final String? initialCategory; // 'lolita' | 'earth'
+  final Item? itemToEdit; // 传入已有单品则为编辑模式
   final WishlistItem? prefilledWishlistItem;
   final VoidCallback? onItemAdded;
 
   const AddScreen({
     super.key,
     this.initialCategory,
+    this.itemToEdit,
     this.prefilledWishlistItem,
     this.onItemAdded,
   });
@@ -43,7 +46,7 @@ class _AddScreenState extends State<AddScreen> {
   late String _category;
   String _subCategory = 'JSK';
   String _season = '四季通用';
-  String _size = '均码'; // 默认均码
+  String _size = '均码';
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _shopNameController = TextEditingController();
@@ -66,12 +69,60 @@ class _AddScreenState extends State<AddScreen> {
   @override
   void initState() {
     super.initState();
-    _category = widget.initialCategory ?? AppConstants.categoryLolita;
+    _category = widget.initialCategory ?? (widget.itemToEdit?.category ?? AppConstants.categoryLolita);
     _initDefaults();
     _loadAccessories();
   }
 
   void _initDefaults() {
+    // 1. 如果是编辑已有单品模式
+    if (widget.itemToEdit != null) {
+      final it = widget.itemToEdit!;
+      _category = it.category;
+      _subCategory = it.subCategory;
+      _nameController.text = it.name;
+      _shopNameController.text = it.shopName ?? '';
+      _imagePath = it.imagePath;
+
+      // 尺码
+      if (it.size != null && it.size!.isNotEmpty) {
+        if (AppConstants.clothingSizes.contains(it.size)) {
+          _size = it.size!;
+        } else {
+          _size = '其他';
+          _customSizeController.text = it.size!;
+        }
+      }
+
+      // 季节
+      if (it.season != null && it.season!.isNotEmpty) {
+        _season = it.season!;
+      }
+
+      // 付款模式
+      _isDepositType = it.isDepositType;
+      if (it.isDepositType) {
+        _depositPriceController.text = it.depositPrice > 0 ? it.depositPrice.toStringAsFixed(0) : '';
+        _depositDate = it.depositDate ?? DateFormat('yyyy-MM-dd').format(DateTime.now());
+        _expectedDate = it.expectedDate;
+        _hasPaidBalance = it.isCompletedBalance;
+        if (it.isCompletedBalance) {
+          _balancePriceController.text = it.balancePrice > 0 ? it.balancePrice.toStringAsFixed(0) : '';
+          _balanceDate = it.balanceDate;
+        }
+      } else {
+        _fullPriceController.text = it.fullPrice > 0 ? it.fullPrice.toStringAsFixed(0) : '';
+        _purchaseDate = it.depositDate ?? DateFormat('yyyy-MM-dd').format(DateTime.now());
+      }
+
+      // 已绑定的饰品
+      for (final a in it.associatedAccessories) {
+        if (a.id != null) _selectedAccessoryIds.add(a.id!);
+      }
+      return;
+    }
+
+    // 2. 新增模式智能默认项
     if (_category == AppConstants.categoryLolita) {
       _subCategory = AppConstants.lolitaSubCategories.first;
       _isDepositType = true;
@@ -80,6 +131,7 @@ class _AddScreenState extends State<AddScreen> {
       _isDepositType = false;
     }
 
+    // 3. 若从心愿单预填带入
     if (widget.prefilledWishlistItem != null) {
       final wish = widget.prefilledWishlistItem!;
       _nameController.text = wish.name;
@@ -137,6 +189,7 @@ class _AddScreenState extends State<AddScreen> {
   @override
   Widget build(BuildContext context) {
     final isLolita = _category == AppConstants.categoryLolita;
+    final isEditMode = widget.itemToEdit != null;
 
     return Scaffold(
       backgroundColor: FuwaColors.creamWhite,
@@ -149,7 +202,9 @@ class _AddScreenState extends State<AddScreen> {
           onPressed: () => Navigator.pop(context, false),
         ),
         title: Text(
-          widget.prefilledWishlistItem != null ? '心愿单入库 · 录入衣物 ୨୧' : '录入新衣物 ୨୧',
+          isEditMode
+              ? '修改单品档案 ୨୧'
+              : (widget.prefilledWishlistItem != null ? '心愿单入库 · 录入衣物 ୨୧' : '录入新衣物 ୨୧'),
           style: const TextStyle(
             color: FuwaColors.chocolateDark,
             fontSize: 18,
@@ -176,7 +231,7 @@ class _AddScreenState extends State<AddScreen> {
           ),
         ),
       ),
-      bottomSheet: _buildBottomSaveBar(),
+      bottomSheet: _buildBottomSaveBar(isEditMode),
     );
   }
 
@@ -382,7 +437,7 @@ class _AddScreenState extends State<AddScreen> {
 
           const SizedBox(height: 16),
 
-          // 核心更新 1：服装尺码选择（XS/S/M/L/均码/手写其他）
+          // 服装尺码选择（XS/S/M/L/均码/手写其他）
           const Text('服装尺码', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Wrap(
@@ -411,7 +466,6 @@ class _AddScreenState extends State<AddScreen> {
             }).toList(),
           ),
 
-          // 若选择“其他”，展开手写输入具体尺码
           if (_size == '其他') ...[
             const SizedBox(height: 10),
             _buildTextInput(
@@ -687,7 +741,7 @@ class _AddScreenState extends State<AddScreen> {
     );
   }
 
-  Widget _buildBottomSaveBar() {
+  Widget _buildBottomSaveBar(bool isEditMode) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
@@ -705,12 +759,15 @@ class _AddScreenState extends State<AddScreen> {
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
           ),
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(FuwaColors.ribbonSymbol, style: TextStyle(color: Colors.white, fontSize: 16)),
-              SizedBox(width: 8),
-              Text('保存至我的衣柜 ୨୧', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+              const Text(FuwaColors.ribbonSymbol, style: TextStyle(color: Colors.white, fontSize: 16)),
+              const SizedBox(width: 8),
+              Text(
+                isEditMode ? '保存修改档案 ୨୧' : '保存至我的衣柜 ୨୧',
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+              ),
             ],
           ),
         ),
@@ -864,17 +921,17 @@ class _AddScreenState extends State<AddScreen> {
     final balancePrice = double.tryParse(_balancePriceController.text.trim()) ?? 0.0;
     final shopNameText = _shopNameController.text.trim();
 
-    // 尺码逻辑：若选“其他”，取手写输入内容
     final sizeVal = _size == '其他'
         ? (_customSizeController.text.trim().isNotEmpty ? _customSizeController.text.trim() : '其他')
         : _size;
 
-    final newItem = Item(
+    final itemData = Item(
+      id: widget.itemToEdit?.id, // 若为编辑模式保留原有 id
       category: _category,
       subCategory: _subCategory,
       name: _nameController.text.trim(),
       imagePath: _imagePath,
-      size: sizeVal, // 保存服装尺码
+      size: sizeVal,
       season: isLolita ? null : _season,
       shopName: shopNameText.isNotEmpty ? shopNameText : null,
       isDepositType: isLolita && _isDepositType,
@@ -886,18 +943,27 @@ class _AddScreenState extends State<AddScreen> {
       expectedDate: (isLolita && _isDepositType) ? _expectedDate : null,
     );
 
-    await _dbHelper.insertItem(
-      newItem,
-      accessoryIds: _selectedAccessoryIds.toList(),
-    );
+    if (widget.itemToEdit != null) {
+      // 执行修改更新
+      await _dbHelper.updateItem(
+        itemData,
+        accessoryIds: _selectedAccessoryIds.toList(),
+      );
+    } else {
+      // 执行新增录入
+      await _dbHelper.insertItem(
+        itemData,
+        accessoryIds: _selectedAccessoryIds.toList(),
+      );
+    }
 
     if (mounted) {
       widget.onItemAdded?.call();
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           backgroundColor: FuwaColors.balletPink,
-          content: Text('轻飘飘的单品已收入衣柜 ୨୧'),
+          content: Text(widget.itemToEdit != null ? '单品档案已成功修改 ୨୧' : '轻飘飘的单品已收入衣柜 ୨୧'),
         ),
       );
     }
