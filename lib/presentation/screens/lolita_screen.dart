@@ -33,6 +33,12 @@ class LolitaScreen extends StatefulWidget {
 }
 
 
+
+
+class _LolitaScreenState extends State<LolitaScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   Future<void> _confirmDeleteAccessory(Accessory acc) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -57,11 +63,6 @@ class LolitaScreen extends StatefulWidget {
       _loadAccessories();
     }
   }
-
-class _LolitaScreenState extends State<LolitaScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   // 洋装状态
   List<Item> _dresses = [];
