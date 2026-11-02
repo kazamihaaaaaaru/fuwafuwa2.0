@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/fuwa_colors.dart';
 import '../../data/models/item.dart';
-import '../widgets/add_accessory_sheet.dart';
+import 'add_accessory_screen.dart';
 import 'add_screen.dart';
 import 'earth_screen.dart';
 import 'finance_screen.dart';
@@ -12,9 +12,9 @@ import 'wishlist_screen.dart';
 
 /// 主脚手架与甘系底部导航栏（`MainScaffold`）
 /// 严格遵循甘系（Sweet Lolita）视觉设计规范：
-/// - 4 个核心 Tab: 【Lolita ୨୧】| 【地球人】| 【心愿单】| 【记账】
-/// - 纯白圆角搭配柔粉微阴影底栏
-/// - 全局广播刷新协同机制
+/// - Lolita 采用专属优雅蝴蝶结图标（与主视觉小缎带区分）
+/// - 地球人采用典雅衣架图标（Icons.checkroom_rounded）
+/// - 4 个核心 Tab: 【Lolita】| 【地球人】| 【心愿单】| 【记账】
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
 
@@ -74,10 +74,14 @@ class _MainScaffoldState extends State<MainScaffold> {
     );
   }
 
-  void _openAddAccessorySheet() {
-    AddAccessorySheet.show(
-      context,
-      onAdded: _notifyGlobalDataChanged,
+  void _openAddAccessoryScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AddAccessoryScreen(
+          onAdded: _notifyGlobalDataChanged,
+        ),
+        fullscreenDialog: true,
+      ),
     );
   }
 
@@ -88,25 +92,21 @@ class _MainScaffoldState extends State<MainScaffold> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          // Tab 1: Lolita ＆ 小物（顶部书签两用）
           LolitaScreen(
             key: _lolitaKey,
             onAddDressTap: _openAddDressScreen,
-            onAddAccessoryTap: _openAddAccessorySheet,
+            onAddAccessoryTap: _openAddAccessoryScreen,
             onItemTap: _openItemDetail,
           ),
-          // Tab 2: 地球人衣柜（双排交集筛选）
           EarthScreen(
             key: _earthKey,
             onAddTap: _openAddEarthScreen,
             onItemTap: _openItemDetail,
           ),
-          // Tab 3: 心愿单（种草与一键转入衣柜）
           WishlistScreen(
             key: _wishlistKey,
             onWardrobeUpdated: _notifyGlobalDataChanged,
           ),
-          // Tab 4: 记账看板（月度支出与纯正数流水）
           FinanceScreen(
             key: _financeKey,
             onDataChanged: _notifyGlobalDataChanged,
@@ -128,24 +128,28 @@ class _MainScaffoldState extends State<MainScaffold> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
+                // 1. Lolita 专属蝴蝶结图标
                 _buildNavItem(
                   index: 0,
-                  icon: Icons.checkroom_rounded,
+                  customIcon: (color) => BowIcon(size: 20, color: color),
                   label: 'Lolita',
                 ),
+                // 2. 地球人衣柜衣架图标
                 _buildNavItem(
                   index: 1,
-                  icon: Icons.dry_cleaning_rounded,
+                  systemIcon: Icons.checkroom_rounded,
                   label: '地球人',
                 ),
+                // 3. 心愿单爱心图标
                 _buildNavItem(
                   index: 2,
-                  icon: Icons.favorite_border_rounded,
+                  systemIcon: Icons.favorite_border_rounded,
                   label: '心愿单',
                 ),
+                // 4. 记账看板钱包图标
                 _buildNavItem(
                   index: 3,
-                  icon: Icons.account_balance_wallet_outlined,
+                  systemIcon: Icons.account_balance_wallet_outlined,
                   label: '记账',
                 ),
               ],
@@ -158,10 +162,12 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   Widget _buildNavItem({
     required int index,
-    required IconData icon,
+    IconData? systemIcon,
+    Widget Function(Color color)? customIcon,
     required String label,
   }) {
     final isSelected = _currentIndex == index;
+    final color = isSelected ? FuwaColors.balletPink : FuwaColors.mutedRosyBrown;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -176,11 +182,10 @@ class _MainScaffoldState extends State<MainScaffold> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isSelected ? FuwaColors.balletPink : FuwaColors.mutedRosyBrown,
-            ),
+            if (customIcon != null)
+              customIcon(color)
+            else if (systemIcon != null)
+              Icon(systemIcon, size: 21, color: color),
             if (isSelected) ...[
               const SizedBox(width: 5),
               Text(
@@ -205,4 +210,73 @@ class _MainScaffoldState extends State<MainScaffold> {
       ),
     );
   }
+}
+
+/// Lolita 专属蝴蝶结图标组件（独立绘制，区分主视觉小缎带）
+class BowIcon extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  const BowIcon({super.key, this.size = 20, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size(size, size),
+      painter: _BowPainter(color),
+    );
+  }
+}
+
+class _BowPainter extends CustomPainter {
+  final Color color;
+  _BowPainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+    final cy = h * 0.44;
+
+    // 左侧蝴蝶结环
+    final leftPath = Path()
+      ..moveTo(cx - 1.5, cy)
+      ..cubicTo(cx - w * 0.48, cy - h * 0.38, cx - w * 0.48, cy + h * 0.38, cx - 1.5, cy)
+      ..close();
+    canvas.drawPath(leftPath, paint);
+
+    // 右侧蝴蝶结环
+    final rightPath = Path()
+      ..moveTo(cx + 1.5, cy)
+      ..cubicTo(cx + w * 0.48, cy - h * 0.38, cx + w * 0.48, cy + h * 0.38, cx + 1.5, cy)
+      ..close();
+    canvas.drawPath(rightPath, paint);
+
+    // 中间蝴蝶结绳结
+    canvas.drawCircle(Offset(cx, cy), w * 0.12, paint);
+
+    // 左侧飘带
+    final leftTail = Path()
+      ..moveTo(cx - 1.5, cy + 2)
+      ..lineTo(cx - w * 0.28, h * 0.94)
+      ..lineTo(cx - w * 0.12, h * 0.94)
+      ..close();
+    canvas.drawPath(leftTail, paint);
+
+    // 右侧飘带
+    final rightTail = Path()
+      ..moveTo(cx + 1.5, cy + 2)
+      ..lineTo(cx + w * 0.28, h * 0.94)
+      ..lineTo(cx + w * 0.12, h * 0.94)
+      ..close();
+    canvas.drawPath(rightTail, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _BowPainter oldDelegate) => oldDelegate.color != color;
 }

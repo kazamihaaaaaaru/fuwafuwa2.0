@@ -7,12 +7,11 @@ import '../models/wishlist_item.dart';
 
 /// 「ふわふわ（FuwaFuwa）」核心本地数据库辅助类
 /// 基于 SQLite 纯本地运行，严格隔离外部网络
-/// 版本 v2：支持小物定尾制、心愿单管理、增量无缝平滑升级
+/// 版本 v2：支持待补款自动置顶、小物定尾制、心愿单管理、增量无缝平滑升级
 class DatabaseHelper {
   static const String _dbName = 'fuwafuwa.db';
-  static const int _dbVersion = 2; // 升级至 v2
+  static const int _dbVersion = 2;
 
-  // 表名
   static const String tableItems = 'items';
   static const String tableAccessories = 'accessories';
   static const String tableItemAccessories = 'item_accessories';
@@ -43,13 +42,10 @@ class DatabaseHelper {
   }
 
   Future<void> _onConfigure(Database db) async {
-    // 启用外键级联支持
     await db.execute('PRAGMA foreign_keys = ON;');
   }
 
-  /// 首次安装建表 (v2 完整表结构)
   Future<void> _createDB(Database db, int version) async {
-    // 1. 单品表（Items）
     await db.execute('''
       CREATE TABLE $tableItems (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -69,7 +65,6 @@ class DatabaseHelper {
       );
     ''');
 
-    // 2. 小物表（Accessories，v2 全面支持定尾制）
     await db.execute('''
       CREATE TABLE $tableAccessories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,7 +83,6 @@ class DatabaseHelper {
       );
     ''');
 
-    // 3. 单品-小物关联表（ItemAccessories）
     await db.execute('''
       CREATE TABLE $tableItemAccessories (
         itemId INTEGER NOT NULL,
@@ -99,7 +93,6 @@ class DatabaseHelper {
       );
     ''');
 
-    // 4. 心愿单表（Wishlist）
     await db.execute('''
       CREATE TABLE $tableWishlist (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -116,17 +109,14 @@ class DatabaseHelper {
       );
     ''');
 
-    // 常用索引
     await db.execute('CREATE INDEX idx_items_cat ON $tableItems(category);');
     await db.execute('CREATE INDEX idx_items_deposit ON $tableItems(isDepositType, balanceDate);');
     await db.execute('CREATE INDEX idx_acc_type ON $tableAccessories(accessoryType);');
     await db.execute('CREATE INDEX idx_wishlist_desire ON $tableWishlist(desireLevel);');
   }
 
-  /// 增量升级：保证旧版本数据 100% 完整保留，不丢任何记录！
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // 1. 为 accessories 表增加定尾支持字段
       try {
         await db.execute('ALTER TABLE $tableAccessories ADD COLUMN isDepositType INTEGER NOT NULL DEFAULT 0;');
         await db.execute('ALTER TABLE $tableAccessories ADD COLUMN fullPrice REAL DEFAULT 0.0;');
@@ -136,7 +126,6 @@ class DatabaseHelper {
         await db.execute('ALTER TABLE $tableAccessories ADD COLUMN balanceDate TEXT;');
         await db.execute('ALTER TABLE $tableAccessories ADD COLUMN expectedDate TEXT;');
 
-        // 数据平滑同步：旧 price 赋给 fullPrice，旧 purchaseDate 赋给 depositDate
         await db.execute('''
           UPDATE $tableAccessories 
           SET fullPrice = price, depositDate = purchaseDate 
@@ -144,7 +133,6 @@ class DatabaseHelper {
         ''');
       } catch (_) {}
 
-      // 2. 创建心愿单表
       await db.execute('''
         CREATE TABLE IF NOT EXISTS $tableWishlist (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -165,7 +153,7 @@ class DatabaseHelper {
   }
 
   // ==========================================
-  // 单品表 (Items) CRUD
+  // 单品表 (Items) CRUD - 待补尾款自动置顶
   // ==========================================
 
   Future<int> insertItem(Item item, {List<int>? accessoryIds}) async {
@@ -238,7 +226,7 @@ class DatabaseHelper {
     return Item.fromMap(maps.first, accessories: accessories);
   }
 
-  /// 多维度查询单品（支持双排交集筛选）
+  /// 多维度查询单品：待补尾款的裙子自动置顶！
   Future<List<Item>> getAllItems({
     String? category,
     String? subCategory,
@@ -268,17 +256,21 @@ class DatabaseHelper {
     }
 
     final where = whereClauses.isEmpty ? null : whereClauses.join(' AND ');
+
+    // 核心优化 3：待补尾款（isDepositType=1 且 balanceDate 为空）自动置顶排序！
+    const orderClause =
+        '(CASE WHEN isDepositType = 1 AND (balanceDate IS NULL OR trim(balanceDate) = "") THEN 0 ELSE 1 END) ASC, id DESC';
+
     final maps = await db.query(
       tableItems,
       where: where,
       whereArgs: whereArgs.isEmpty ? null : whereArgs,
-      orderBy: 'id DESC',
+      orderBy: orderClause,
     );
 
     return maps.map((m) => Item.fromMap(m)).toList();
   }
 
-  /// 业务操作：【记录补款】一键转已出货
   Future<int> recordBalancePayment(int itemId, double balancePrice, String balanceDate) async {
     final db = await database;
     return await db.update(
@@ -293,7 +285,7 @@ class DatabaseHelper {
   }
 
   // ==========================================
-  // 小物表 (Accessories) CRUD
+  // 小物表 (Accessories) CRUD - 待补尾款自动置顶
   // ==========================================
 
   Future<int> insertAccessory(Accessory accessory) async {
@@ -333,6 +325,7 @@ class DatabaseHelper {
     return Accessory.fromMap(maps.first);
   }
 
+  /// 获取小物列表：待补尾款的小物同样自动置顶！
   Future<List<Accessory>> getAllAccessories({
     String? accessoryType,
     String? searchQuery,
@@ -351,17 +344,21 @@ class DatabaseHelper {
     }
 
     final where = whereClauses.isEmpty ? null : whereClauses.join(' AND ');
+
+    // 核心优化 3：待补尾款小物自动置顶！
+    const orderClause =
+        '(CASE WHEN isDepositType = 1 AND (balanceDate IS NULL OR trim(balanceDate) = "") THEN 0 ELSE 1 END) ASC, id DESC';
+
     final maps = await db.query(
       tableAccessories,
       where: where,
       whereArgs: whereArgs.isEmpty ? null : whereArgs,
-      orderBy: 'id DESC',
+      orderBy: orderClause,
     );
 
     return maps.map((m) => Accessory.fromMap(m)).toList();
   }
 
-  /// 小物一键记录补款出货
   Future<int> recordAccessoryBalancePayment(int accessoryId, double balancePrice, String balanceDate) async {
     final db = await database;
     return await db.update(
@@ -491,7 +488,6 @@ class DatabaseHelper {
   Future<FinanceSummary> getFinanceSummary() async {
     final db = await database;
 
-    // 地球人总支出
     final earthRes = await db.rawQuery('''
       SELECT 
         SUM(CASE WHEN isDepositType = 0 THEN fullPrice ELSE (depositPrice + balancePrice) END) as total
@@ -500,7 +496,6 @@ class DatabaseHelper {
     ''');
     final earthTotal = (earthRes.first['total'] as num?)?.toDouble() ?? 0.0;
 
-    // Lolita 洋装总支出
     final lolitaRes = await db.rawQuery('''
       SELECT 
         SUM(CASE WHEN isDepositType = 0 THEN fullPrice ELSE (depositPrice + balancePrice) END) as total
@@ -509,7 +504,6 @@ class DatabaseHelper {
     ''');
     final lolitaTotal = (lolitaRes.first['total'] as num?)?.toDouble() ?? 0.0;
 
-    // 小物总支出 (支持现货与定尾)
     final accRes = await db.rawQuery('''
       SELECT 
         SUM(CASE WHEN isDepositType = 0 THEN (CASE WHEN fullPrice > 0 THEN fullPrice ELSE price END) ELSE (depositPrice + balancePrice) END) as total
@@ -517,7 +511,6 @@ class DatabaseHelper {
     ''');
     final accessoryTotal = (accRes.first['total'] as num?)?.toDouble() ?? 0.0;
 
-    // 当前未完成尾款总数（聚合 items 与 accessories）
     final pendingItemsRes = await db.rawQuery('''
       SELECT 
         COUNT(*) as count,
@@ -548,7 +541,6 @@ class DatabaseHelper {
     );
   }
 
-  /// 实际扣款流水明细时间线（严格按实际扣款日期对齐，支持小物定尾，金额均为正数）
   Future<List<FinanceRecord>> getFinanceTimeline({String? yearMonth}) async {
     final db = await database;
 
@@ -646,19 +638,6 @@ class DatabaseHelper {
 
     final maps = await db.rawQuery(sql);
     return maps.map((m) => FinanceRecord.fromMap(m)).toList();
-  }
-
-  /// 获取指定月份的支出总额与交易笔数
-  Future<Map<String, dynamic>> getMonthSummary(String yearMonth) async {
-    final timeline = await getFinanceTimeline(yearMonth: yearMonth);
-    double total = 0.0;
-    for (final r in timeline) {
-      total += r.amount;
-    }
-    return {
-      'total': total,
-      'count': timeline.length,
-    };
   }
 
   Future<void> close() async {

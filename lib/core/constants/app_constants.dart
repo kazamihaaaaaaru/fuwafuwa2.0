@@ -7,7 +7,7 @@ class AppConstants {
   static const String categoryLolita = 'lolita';
   static const String categoryAccessory = 'accessory';
 
-  // 地球人服饰子类目（已扩展鞋、袜、帽子、包、伞）
+  // 地球人服饰子类目（含鞋、袜、帽子、包、伞）
   static const List<String> earthSubCategories = [
     '上衣',
     '下装',
@@ -21,14 +21,16 @@ class AppConstants {
     '其他',
   ];
 
-  // Lolita 洋装子类目
+  // Lolita 洋装子类目（裙撑与内搭已拆分，包含 JK）
   static const List<String> lolitaSubCategories = [
     'JSK',
     'OP',
     'SK',
     '衬衫',
     '斗篷',
-    '裙撑/内搭',
+    '裙撑',
+    '内搭',
+    'JK',
   ];
 
   // 地球人季节标签
@@ -40,7 +42,7 @@ class AppConstants {
     '四季通用',
   ];
 
-  // 小物类型（已加入发带）
+  // 小物类型
   static const List<String> accessoryTypes = [
     'KC',
     'BNT',
@@ -54,7 +56,7 @@ class AppConstants {
     '其他',
   ];
 
-  // 心愿单心动等级（专属少女感设计）
+  // 心愿单心动等级
   static const List<String> desireLevels = [
     '非入不可 ♡',
     '很心动 ୨୧',

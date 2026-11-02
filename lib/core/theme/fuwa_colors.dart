@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 /// 甘系（Sweet Lolita）视觉设计系统规范
-/// 灵感源自《下妻物语》：“在廉价的生活里做着轻飘飘的少女梦”
 class FuwaColors {
   FuwaColors._();
 
@@ -23,7 +22,13 @@ class FuwaColors {
   // 点缀色：金平糖金（待补款/预警状态徽章）
   static const Color sugarCandyGold = Color(0xFFE6B875);
 
-  // 标题与价格：巧克力深棕（严禁纯黑）
+  // 四季专属灵动高亮色（樱粉、冰蓝、奶杏、雪灰蓝）
+  static const Color seasonSpring = Color(0xFFF7A8B8); // 春：樱粉色
+  static const Color seasonSummer = Color(0xFF8EC5FC); // 夏：冰蓝色
+  static const Color seasonAutumn = Color(0xFFE8C39E); // 秋：奶杏色
+  static const Color seasonWinter = Color(0xFFB8C9D9); // 冬：雪白浅灰蓝
+
+  // 标题与价格：巧克力深棕（杜绝纯黑）
   static const Color chocolateDark = Color(0xFF5C3D42);
 
   // 副文本与次要信息：灰粉棕

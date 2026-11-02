@@ -647,7 +647,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           _buildSpecItem('品类', item.subCategory),
           if (item.isEarth && item.season != null && item.season!.isNotEmpty)
             _buildSpecItem('适用季节', item.season!),
-          if (item.isLolita && item.shopName != null && item.shopName!.isNotEmpty)
+          if (item.shopName != null && item.shopName!.isNotEmpty)
             _buildSpecItem('店铺品牌', item.shopName!),
           _buildSpecItem('购买方式', item.isDepositType ? '定金尾款预定制' : '现货全款'),
         ],

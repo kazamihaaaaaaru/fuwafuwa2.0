@@ -1,9 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import '../../core/constants/app_constants.dart';
-import '../../core/services/image_storage_service.dart';
 import '../../core/theme/fuwa_colors.dart';
 import '../../data/database/database_helper.dart';
 import '../../data/models/accessory.dart';
@@ -12,12 +9,12 @@ import '../widgets/fuwa_animations.dart';
 import '../widgets/polaroid_card.dart';
 import 'item_detail_screen.dart';
 
-/// Tab 1: 【Lolita ＆ 小物】(`LolitaScreen`)
+/// Tab 1: 【Lolita 衣柜】(`LolitaScreen`)
 /// 严格遵循甘系（Sweet Lolita）视觉设计规范：
-/// - 顶部书签分栏：【洋装裙装】与【搭配小物】，支持点击或左右滑动切换
-/// - 洋装展示拍立得双列照片墙与子类目胶囊
+/// - 顶部左侧简洁标题【Lolita 衣柜 ୨୧】，右上角展示件数徽标
+/// - 标题下方居中大书签横栏【洋装裙装】与【搭配小物】（舒展宽敞，告别局促）
+/// - 洋装展示拍立得双列照片墙与子类目胶囊（含 JK）
 /// - 小物展示饰品网格、定尾周期与已搭配裙装
-/// - 悬浮小缎带按钮支持一键弹出【录入洋装】或【录入小物】
 class LolitaScreen extends StatefulWidget {
   final VoidCallback? onAddDressTap;
   final VoidCallback? onAddAccessoryTap;
@@ -38,7 +35,6 @@ class _LolitaScreenState extends State<LolitaScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-  final ImageStorageService _imageService = ImageStorageService.instance;
 
   // 洋装状态
   List<Item> _dresses = [];
@@ -57,6 +53,9 @@ class _LolitaScreenState extends State<LolitaScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
     _loadDresses();
     _loadAccessories();
   }
@@ -109,60 +108,69 @@ class _LolitaScreenState extends State<LolitaScreen>
 
   @override
   Widget build(BuildContext context) {
+    final currentCount = _tabController.index == 0 ? _dresses.length : _accessories.length;
+
     return Scaffold(
       backgroundColor: FuwaColors.creamWhite,
       body: SafeArea(
         child: Column(
           children: [
-            // 1. 顶部轻飘飘艺术标题
+            // 1. 顶部标题栏：左侧【Lolita 衣柜 ୨୧】，右侧【X 件】徽标（与地球人衣柜统一）
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Lolita ＆ 小物 ୨୧',
-                        style: TextStyle(
-                          color: FuwaColors.chocolateDark,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        '在廉价的生活里做着轻飘飘的少女梦',
-                        style: TextStyle(
-                          color: FuwaColors.mutedRosyBrown,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                  // 书签式双段切换
-                  Container(
-                    height: 38,
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      color: FuwaColors.apricotCream,
-                      borderRadius: BorderRadius.circular(20),
+                  const Text(
+                    'Lolita 衣柜 ୨୧',
+                    style: TextStyle(
+                      color: FuwaColors.chocolateDark,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
                     ),
-                    child: Row(
-                      children: [
-                        _buildBookmarkTab(0, '洋装裙装'),
-                        _buildBookmarkTab(1, '搭配小物'),
-                      ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: FuwaColors.pureWhite,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: FuwaColors.softCardShadow,
+                      border: Border.all(color: FuwaColors.subtleBorder),
+                    ),
+                    child: Text(
+                      '$currentCount 件',
+                      style: const TextStyle(
+                        color: FuwaColors.chocolateDark,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
 
-            // 2. 双页内容区（洋装裙装 vs 搭配小物）
+            // 2. 居中横置大书签分栏：【洋装裙装】与【搭配小物】（整栏居中展宽，从容呼吸）
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Container(
+                height: 44,
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: FuwaColors.apricotCream,
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: Row(
+                  children: [
+                    _buildWideBookmarkTab(0, '洋装裙装 ୨୧'),
+                    _buildWideBookmarkTab(1, '搭配小物 ୨୧'),
+                  ],
+                ),
+              ),
+            ),
+
+            // 3. 双页内容区（洋装裙装 vs 搭配小物）
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -175,32 +183,41 @@ class _LolitaScreenState extends State<LolitaScreen>
           ],
         ),
       ),
-      // 底部缎带呼吸 FAB
       floatingActionButton: _buildFab(),
     );
   }
 
-  Widget _buildBookmarkTab(int index, String title) {
+  Widget _buildWideBookmarkTab(int index, String title) {
     final isSelected = _tabController.index == index;
-    return GestureDetector(
-      onTap: () {
-        _tabController.animateTo(index);
-        setState(() {});
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? FuwaColors.pureWhite : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: isSelected ? FuwaColors.softCardShadow : null,
-        ),
-        child: Text(
-          title,
-          style: TextStyle(
-            color: isSelected ? FuwaColors.balletPink : FuwaColors.mutedRosyBrown,
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          _tabController.animateTo(index);
+          setState(() {});
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: isSelected ? FuwaColors.pureWhite : Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: FuwaColors.softGlowPink.withOpacity(0.6),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            title,
+            style: TextStyle(
+              color: isSelected ? FuwaColors.balletPink : FuwaColors.mutedRosyBrown,
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            ),
           ),
         ),
       ),
@@ -208,7 +225,7 @@ class _LolitaScreenState extends State<LolitaScreen>
   }
 
   // ==========================================
-  // 第一页：洋装裙装
+  // 第一页：洋装裙装（含 JK 选项）
   // ==========================================
 
   Widget _buildDressPageView() {
@@ -220,10 +237,9 @@ class _LolitaScreenState extends State<LolitaScreen>
       onRefresh: _loadDresses,
       child: CustomScrollView(
         slivers: [
-          // 子类目滑动胶囊
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 6),
               child: SizedBox(
                 height: 36,
                 child: ListView.separated(
@@ -247,6 +263,9 @@ class _LolitaScreenState extends State<LolitaScreen>
                           border: Border.all(
                             color: isSel ? FuwaColors.balletPink : FuwaColors.subtleBorder,
                           ),
+                          boxShadow: isSel
+                              ? [BoxShadow(color: FuwaColors.balletPink.withOpacity(0.35), blurRadius: 6, offset: const Offset(0, 2))]
+                              : null,
                         ),
                         child: Text(
                           item,
@@ -269,11 +288,11 @@ class _LolitaScreenState extends State<LolitaScreen>
               child: Center(child: CircularProgressIndicator(color: FuwaColors.balletPink)),
             )
           else if (_dresses.isEmpty)
-            SliverFillRemaining(
+            const SliverFillRemaining(
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 36)),
                     SizedBox(height: 8),
                     Text('还没有收藏 Lolita 洋装 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
@@ -289,7 +308,7 @@ class _LolitaScreenState extends State<LolitaScreen>
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.60, // 宽裕相纸留白
+                  childAspectRatio: 0.60,
                   mainAxisSpacing: 14,
                   crossAxisSpacing: 14,
                 ),
@@ -337,10 +356,9 @@ class _LolitaScreenState extends State<LolitaScreen>
       onRefresh: _loadAccessories,
       child: CustomScrollView(
         slivers: [
-          // 小物分类胶囊
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 6),
               child: SizedBox(
                 height: 36,
                 child: ListView.separated(
@@ -364,6 +382,9 @@ class _LolitaScreenState extends State<LolitaScreen>
                           border: Border.all(
                             color: isSel ? FuwaColors.balletPink : FuwaColors.subtleBorder,
                           ),
+                          boxShadow: isSel
+                              ? [BoxShadow(color: FuwaColors.balletPink.withOpacity(0.35), blurRadius: 6, offset: const Offset(0, 2))]
+                              : null,
                         ),
                         child: Text(
                           item,
@@ -386,11 +407,11 @@ class _LolitaScreenState extends State<LolitaScreen>
               child: Center(child: CircularProgressIndicator(color: FuwaColors.balletPink)),
             )
           else if (_accessories.isEmpty)
-            SliverFillRemaining(
+            const SliverFillRemaining(
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 36)),
                     SizedBox(height: 8),
                     Text('小物箱里还没有饰品 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
@@ -476,7 +497,6 @@ class _LolitaScreenState extends State<LolitaScreen>
                       ),
                     ),
                   ),
-                  // 定金尾款制工期徽章
                   if (acc.isDepositType && acc.durationBadgeText != null)
                     Positioned(
                       top: 6,
@@ -555,10 +575,6 @@ class _LolitaScreenState extends State<LolitaScreen>
       ),
     );
   }
-
-  // ==========================================
-  // 小物详情与一键补款弹窗
-  // ==========================================
 
   Future<void> _showAccessoryDetail(Accessory acc) async {
     final boundItems = await _dbHelper.getItemsForAccessory(acc.id!);
@@ -660,27 +676,6 @@ class _LolitaScreenState extends State<LolitaScreen>
                 ),
               ),
 
-              // 小物待补款时，提供一键补款出货
-              if (acc.isPendingBalance) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  height: 42,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      Navigator.pop(ctx);
-                      _showRecordAccessoryBalanceDialog(acc);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: FuwaColors.balletPink,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      elevation: 0,
-                    ),
-                    child: const Text('【记录补款】一键出货 ୨୧', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                  ),
-                ),
-              ],
-
               const SizedBox(height: 16),
               const Text('已绑定的搭配裙装 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
@@ -723,71 +718,6 @@ class _LolitaScreenState extends State<LolitaScreen>
     );
   }
 
-  /// 小物快捷补款弹窗
-  Future<void> _showRecordAccessoryBalanceDialog(Accessory acc) async {
-    final balanceController = TextEditingController();
-    String selectedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 24),
-          decoration: const BoxDecoration(
-            color: FuwaColors.pureWhite,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('记录小物补款 · ${acc.name} ୨୧', style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 12),
-              const Text('实付尾款金额 (元)', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: balanceController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
-                  hintText: '如 45',
-                  filled: true,
-                  fillColor: FuwaColors.creamWhite,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final val = double.tryParse(balanceController.text.trim()) ?? 0.0;
-                    await _dbHelper.recordAccessoryBalancePayment(acc.id!, val, selectedDate);
-                    if (mounted) {
-                      Navigator.pop(ctx);
-                      _loadAccessories();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: FuwaColors.balletPink,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                  ),
-                  child: const Text('确认补款 ୨୧', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ==========================================
-  // 悬浮录入按钮与双选项弹窗
-  // ==========================================
-
   Widget _buildFab() {
     return FuwaBreathingRibbon(
       child: Container(
@@ -820,7 +750,6 @@ class _LolitaScreenState extends State<LolitaScreen>
     );
   }
 
-  /// 点击 FAB 弹出轻巧优雅的双选抽屉：【录入洋装】vs【录入小物】
   void _showAddChoiceModal() {
     showModalBottomSheet(
       context: context,
@@ -855,7 +784,7 @@ class _LolitaScreenState extends State<LolitaScreen>
                     child: _buildChoiceCard(
                       icon: Icons.checkroom_rounded,
                       title: '录入洋装 ୨୧',
-                      desc: 'JSK / OP / SK / 衬衫',
+                      desc: 'JSK / OP / SK / JK',
                       onTap: () {
                         Navigator.pop(ctx);
                         widget.onAddDressTap?.call();

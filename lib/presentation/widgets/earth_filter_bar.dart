@@ -3,9 +3,8 @@ import '../../core/constants/app_constants.dart';
 import '../../core/theme/fuwa_colors.dart';
 
 /// 地球人常服双排同级滑动胶囊联动筛选栏
-/// 第一排：服装与配饰子类目（上衣/下装/连衣裙/鞋/袜/帽子/包/伞等）
-/// 第二排：季节标签（春/夏/秋/冬/四季通用）
-/// 支持两排交集联动，并提供一键重置小缎带微标
+/// 第一排：服装与配饰子类目
+/// 第二排：四季专属色彩高亮（春樱粉、夏冰蓝、秋奶杏、冬雪灰蓝）
 class EarthFilterBar extends StatelessWidget {
   final String selectedSubCategory;
   final String selectedSeason;
@@ -24,6 +23,23 @@ class EarthFilterBar extends StatelessWidget {
 
   bool get isFiltered =>
       selectedSubCategory != '全部' || selectedSeason != '全部季节';
+
+  Color _getSeasonColor(String season) {
+    switch (season) {
+      case '春':
+        return FuwaColors.seasonSpring; // 樱粉
+      case '夏':
+        return FuwaColors.seasonSummer; // 冰蓝
+      case '秋':
+        return FuwaColors.seasonAutumn; // 奶杏
+      case '冬':
+        return FuwaColors.seasonWinter; // 雪白浅灰蓝
+      case '全部季节':
+      case '四季通用':
+      default:
+        return FuwaColors.balletPink;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,12 +65,12 @@ class EarthFilterBar extends StatelessWidget {
                     return _buildChip(
                       label: item,
                       isSelected: isSel,
+                      activeColor: FuwaColors.balletPink,
                       onTap: () => onSubCategoryChanged(item),
                     );
                   },
                 ),
               ),
-              // 若开启过滤，显示一键重置小缎带按钮
               if (isFiltered)
                 Padding(
                   padding: const EdgeInsets.only(right: 14),
@@ -67,9 +83,9 @@ class EarthFilterBar extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: FuwaColors.balletPink.withOpacity(0.5)),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
+                        children: [
                           Text(
                             FuwaColors.ribbonSymbol,
                             style: TextStyle(color: FuwaColors.balletPink, fontSize: 10),
@@ -94,7 +110,7 @@ class EarthFilterBar extends StatelessWidget {
 
         const SizedBox(height: 8),
 
-        // 第二排：季节标签胶囊栏
+        // 第二排：四季专属色彩高亮胶囊栏
         SizedBox(
           height: 34,
           child: ListView.separated(
@@ -105,9 +121,12 @@ class EarthFilterBar extends StatelessWidget {
             itemBuilder: (context, index) {
               final s = seasons[index];
               final isSel = selectedSeason == s;
+              final color = _getSeasonColor(s);
+
               return _buildChip(
                 label: s,
                 isSelected: isSel,
+                activeColor: color,
                 onTap: () => onSeasonChanged(s),
                 isSecondary: true,
               );
@@ -121,11 +140,10 @@ class EarthFilterBar extends StatelessWidget {
   Widget _buildChip({
     required String label,
     required bool isSelected,
+    required Color activeColor,
     required VoidCallback onTap,
     bool isSecondary = false,
   }) {
-    final activeColor = isSecondary ? FuwaColors.sugarCandyGold : FuwaColors.balletPink;
-
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -141,7 +159,7 @@ class EarthFilterBar extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: activeColor.withOpacity(0.35),
+                    color: activeColor.withOpacity(0.4),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),

@@ -13,9 +13,9 @@ import '../../data/models/wishlist_item.dart';
 /// 模态页: 录入页面 (`AddScreen`)
 /// 严格遵循甘系（Sweet Lolita）视觉设计规范：
 /// - 单张照片拍摄/上传（自动压缩至 1080p 存入私有沙盒）
-/// - 开关滑块优雅柔粉白配色，彻底去除生硬黑色
-/// - 智能默认值：洋装默认定尾制，常服默认全款现货
-/// - 支持从【心愿单】一键带入预填数据
+/// - 地球人与 Lolita 均支持记录【店铺/品牌】
+/// - 洋装子类目拆分裙撑与内搭，并包含 JK
+/// - 开关滑块纯白圆点配色，彻底去除生硬黑色
 class AddScreen extends StatefulWidget {
   final String? initialCategory; // 'lolita' | 'earth'
   final WishlistItem? prefilledWishlistItem;
@@ -70,7 +70,6 @@ class _AddScreenState extends State<AddScreen> {
   }
 
   void _initDefaults() {
-    // 智能默认项：洋装默认定尾，常服默认全款
     if (_category == AppConstants.categoryLolita) {
       _subCategory = AppConstants.lolitaSubCategories.first;
       _isDepositType = true;
@@ -79,14 +78,13 @@ class _AddScreenState extends State<AddScreen> {
       _isDepositType = false;
     }
 
-    // 若从心愿单预填带入
     if (widget.prefilledWishlistItem != null) {
       final wish = widget.prefilledWishlistItem!;
       _nameController.text = wish.name;
       if (wish.shopName != null) _shopNameController.text = wish.shopName!;
       if (wish.budgetPrice > 0) {
         _fullPriceController.text = wish.budgetPrice.toStringAsFixed(0);
-        _depositPriceController.text = (wish.budgetPrice * 0.4).toStringAsFixed(0); // 建议参考定金
+        _depositPriceController.text = (wish.budgetPrice * 0.4).toStringAsFixed(0);
       }
       _imagePath = wish.imagePath;
     }
@@ -338,10 +336,19 @@ class _AddScreenState extends State<AddScreen> {
           const SizedBox(height: 12),
           _buildTextInput(
             label: '单品名称 *',
-            hint: '如：原版琥珀心 OP / 针织开衫',
+            hint: isLolita ? '如：原版琥珀心 OP' : '如：法式碎花裙 / 针织开衫',
             controller: _nameController,
             validator: (v) => (v == null || v.trim().isEmpty) ? '请输入单品名称' : null,
           ),
+          const SizedBox(height: 14),
+
+          // 核心更新 4：地球人常服也支持记录店铺/品牌！
+          _buildTextInput(
+            label: '购买店铺 / 品牌',
+            hint: isLolita ? '如：玻璃花信 / Baby / AP' : '如：Snidel / Zara / 淘宝原创店',
+            controller: _shopNameController,
+          ),
+
           const SizedBox(height: 14),
           const Text('服装子类目', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
@@ -358,7 +365,11 @@ class _AddScreenState extends State<AddScreen> {
                 },
                 selectedColor: FuwaColors.balletPink,
                 backgroundColor: FuwaColors.creamWhite,
-                labelStyle: TextStyle(color: isSel ? Colors.white : FuwaColors.chocolateDark, fontSize: 12, fontWeight: isSel ? FontWeight.w700 : FontWeight.w500),
+                labelStyle: TextStyle(
+                  color: isSel ? Colors.white : FuwaColors.chocolateDark,
+                  fontSize: 12,
+                  fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                   side: BorderSide(color: isSel ? FuwaColors.balletPink : FuwaColors.subtleBorder),
@@ -366,14 +377,8 @@ class _AddScreenState extends State<AddScreen> {
               );
             }).toList(),
           ),
-          const SizedBox(height: 14),
-          if (isLolita) ...[
-            _buildTextInput(
-              label: '购买店铺 / 品牌',
-              hint: '如：玻璃花信 / Baby / AP',
-              controller: _shopNameController,
-            ),
-          ] else ...[
+          if (!isLolita) ...[
+            const SizedBox(height: 14),
             const Text('适用季节', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Wrap(
@@ -456,7 +461,6 @@ class _AddScreenState extends State<AddScreen> {
               onDatePicked: (dt) => setState(() => _expectedDate = dt),
             ),
             const SizedBox(height: 14),
-            // 开关滑块优雅柔和配色（彻底去除生硬黑色！）
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(color: FuwaColors.creamWhite, borderRadius: BorderRadius.circular(16)),
@@ -474,8 +478,8 @@ class _AddScreenState extends State<AddScreen> {
                     value: _hasPaidBalance,
                     activeColor: Colors.white,
                     activeTrackColor: FuwaColors.balletPink,
-                    inactiveThumbColor: Colors.white, // 改为纯白圆点，绝无生硬黑色
-                    inactiveTrackColor: FuwaColors.apricotCream, // 浅杏奶霜底色
+                    inactiveThumbColor: Colors.white,
+                    inactiveTrackColor: FuwaColors.apricotCream,
                     trackOutlineColor: MaterialStateProperty.all(FuwaColors.subtleBorder),
                     onChanged: (val) {
                       setState(() {
@@ -814,6 +818,7 @@ class _AddScreenState extends State<AddScreen> {
     final fullPrice = double.tryParse(_fullPriceController.text.trim()) ?? 0.0;
     final depositPrice = double.tryParse(_depositPriceController.text.trim()) ?? 0.0;
     final balancePrice = double.tryParse(_balancePriceController.text.trim()) ?? 0.0;
+    final shopNameText = _shopNameController.text.trim();
 
     final newItem = Item(
       category: _category,
@@ -821,7 +826,7 @@ class _AddScreenState extends State<AddScreen> {
       name: _nameController.text.trim(),
       imagePath: _imagePath,
       season: isLolita ? null : _season,
-      shopName: isLolita ? _shopNameController.text.trim() : null,
+      shopName: shopNameText.isNotEmpty ? shopNameText : null, // Lolita 与地球人均保存店铺品牌
       isDepositType: isLolita && _isDepositType,
       fullPrice: (!isLolita || !_isDepositType) ? fullPrice : 0.0,
       depositPrice: (isLolita && _isDepositType) ? depositPrice : 0.0,
@@ -838,7 +843,7 @@ class _AddScreenState extends State<AddScreen> {
 
     if (mounted) {
       widget.onItemAdded?.call();
-      Navigator.pop(context, true); // 返回 true 表示添加成功
+      Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: FuwaColors.balletPink,

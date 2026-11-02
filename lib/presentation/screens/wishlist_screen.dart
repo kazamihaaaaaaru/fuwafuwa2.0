@@ -1,20 +1,19 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import '../../core/constants/app_constants.dart';
-import '../../core/services/image_storage_service.dart';
 import '../../core/theme/fuwa_colors.dart';
 import '../../data/database/database_helper.dart';
 import '../../data/models/wishlist_item.dart';
 import '../widgets/fuwa_animations.dart';
 import 'add_screen.dart';
+import 'add_wishlist_screen.dart';
 
 /// Tab 3: 全新【心愿单】(`WishlistScreen`)
 /// 严格遵循甘系（Sweet Lolita）视觉设计规范：
+/// - 胶囊栏与前面页面严格统一尺寸（高 36px，无多余空隙留白）
 /// - 记录种草单品、预算、店家、预计贩售月份与心动等级
 /// - 支持【转入衣柜 ୨୧】预填无缝流转与自动归档
-/// - 支持【拔草（不喜欢了）】一键清爽删除
+/// - 支持【拔草】一键清爽删除
 class WishlistScreen extends StatefulWidget {
   final VoidCallback? onWardrobeUpdated;
 
@@ -26,7 +25,6 @@ class WishlistScreen extends StatefulWidget {
 
 class _WishlistScreenState extends State<WishlistScreen> {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-  final ImageStorageService _imageService = ImageStorageService.instance;
 
   List<WishlistItem> _wishlist = [];
   String _selectedDesireLevel = '全部';
@@ -65,28 +63,14 @@ class _WishlistScreenState extends State<WishlistScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        '少女心愿单 ୨୧',
-                        style: TextStyle(
-                          color: FuwaColors.chocolateDark,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        '种草期盼、预约排期与心动收藏',
-                        style: TextStyle(
-                          color: FuwaColors.mutedRosyBrown,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  const Text(
+                    '少女心愿单 ୨୧',
+                    style: TextStyle(
+                      color: FuwaColors.chocolateDark,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -109,9 +93,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
               ),
             ),
 
-            // 2. 心动等级胶囊筛选栏
+            // 2. 心动等级胶囊筛选栏（高度统一为 36px，无多余白边空隙，和前序页面视觉严格统一）
             SizedBox(
-              height: 40,
+              height: 36,
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 scrollDirection: Axis.horizontal,
@@ -120,6 +104,22 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 itemBuilder: (context, index) {
                   final lvl = levels[index];
                   final isSel = _selectedDesireLevel == lvl;
+                  Color activeColor;
+                  switch (lvl) {
+                    case '非入不可 ♡':
+                      activeColor = FuwaColors.balletPink;
+                      break;
+                    case '很心动 ୨୧':
+                      activeColor = FuwaColors.sugarCandyGold;
+                      break;
+                    case '还在观望 ~':
+                      activeColor = const Color(0xFFC798A6);
+                      break;
+                    default:
+                      activeColor = FuwaColors.balletPink;
+                      break;
+                  }
+
                   return GestureDetector(
                     onTap: () {
                       setState(() => _selectedDesireLevel = lvl);
@@ -128,21 +128,22 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
-                        color: isSel ? FuwaColors.balletPink : FuwaColors.pureWhite,
+                        color: isSel ? activeColor : FuwaColors.pureWhite,
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(
-                          color: isSel ? FuwaColors.balletPink : FuwaColors.subtleBorder,
+                          color: isSel ? activeColor : FuwaColors.subtleBorder,
                         ),
                         boxShadow: isSel
                             ? [
                                 BoxShadow(
-                                  color: FuwaColors.balletPink.withOpacity(0.35),
+                                  color: activeColor.withOpacity(0.35),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),
                               ]
                             : null,
                       ),
+                      alignment: Alignment.center,
                       child: Text(
                         lvl,
                         style: TextStyle(
@@ -157,7 +158,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 6),
 
             // 3. 心愿卡片网格照片流
             Expanded(
@@ -181,10 +182,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
     }
 
     if (_wishlist.isEmpty) {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 36)),
             SizedBox(height: 8),
             Text('心愿单还是空的呢 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
@@ -256,7 +257,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                             ),
                     ),
                   ),
-                  // 心动等级浮标
                   Positioned(
                     top: 6,
                     left: 6,
@@ -324,10 +324,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
       ),
     );
   }
-
-  // ==========================================
-  // 心愿单详情弹窗（含转入衣柜与拔草删除）
-  // ==========================================
 
   Future<void> _showWishlistDetailModal(WishlistItem item) async {
     await showModalBottomSheet(
@@ -426,10 +422,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
             const Spacer(),
 
-            // 核心双操作按钮：【转入衣柜 ୨୧】与【拔草（不喜欢了）】
             Row(
               children: [
-                // 拔草按钮
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () async {
@@ -442,15 +436,14 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
                     ),
                     child: const Text(
-                      '拔草（不喜欢了）',
-                      style: TextStyle(color: FuwaColors.mutedRosyBrown, fontWeight: FontWeight.w600),
+                      '拔草',
+                      style: TextStyle(color: FuwaColors.mutedRosyBrown, fontWeight: FontWeight.w700, fontSize: 14),
                     ),
                   ),
                 ),
 
                 const SizedBox(width: 12),
 
-                // 转入衣柜按钮
                 Expanded(
                   flex: 2,
                   child: ElevatedButton(
@@ -482,7 +475,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
     );
   }
 
-  /// 一键转入衣柜流程（预填信息打开 AddScreen，成功后友好提示自动移出心愿单）
   Future<void> _transferToWardrobe(WishlistItem item) async {
     final added = await Navigator.push<bool>(
       context,
@@ -496,7 +488,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
     if (added == true && mounted) {
       widget.onWardrobeUpdated?.call();
-      // 弹出自动归档确认
       final remove = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -529,15 +520,14 @@ class _WishlistScreenState extends State<WishlistScreen> {
     }
   }
 
-  /// 拔草确认
   Future<void> _confirmRemoveWishlist(WishlistItem item) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: FuwaColors.pureWhite,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('确认拔草不再心动？', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w700)),
-        content: Text('确定要将「${item.name}」从心愿单移除吗？', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 13)),
+        title: const Text('确认拔草此单品？', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w700)),
+        content: Text('确定要将「${item.name}」从心愿单拔草移除吗？', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 13)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('再想想', style: TextStyle(color: FuwaColors.mutedRosyBrown))),
           ElevatedButton(
@@ -555,211 +545,22 @@ class _WishlistScreenState extends State<WishlistScreen> {
     }
   }
 
-  // ==========================================
-  // 新增心愿单抽屉
-  // ==========================================
-
   Widget _buildFab() {
     return FuwaBreathingRibbon(
       child: FloatingActionButton(
-        onPressed: _showAddWishlistModal,
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              fullscreenDialog: true,
+              builder: (_) => AddWishlistScreen(onAdded: _loadWishlist),
+            ),
+          );
+        },
         backgroundColor: FuwaColors.balletPink,
         elevation: 0,
         shape: const CircleBorder(),
         child: const Text(FuwaColors.ribbonSymbol, style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold)),
-      ),
-    );
-  }
-
-  Future<void> _showAddWishlistModal() async {
-    final nameCtrl = TextEditingController();
-    final shopCtrl = TextEditingController();
-    final budgetCtrl = TextEditingController();
-    String? imagePath;
-    String desireLevel = AppConstants.desireLevels.first;
-    String releaseDate = DateFormat('yyyy-MM').format(DateTime.now());
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setSheetState) => Container(
-          padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 24),
-          decoration: const BoxDecoration(
-            color: FuwaColors.pureWhite,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('许愿新单品 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 17, fontWeight: FontWeight.w800)),
-                    IconButton(icon: const Icon(Icons.close_rounded, color: FuwaColors.mutedRosyBrown), onPressed: () => Navigator.pop(ctx)),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Center(
-                  child: GestureDetector(
-                    onTap: () async {
-                      final path = await _imageService.pickAndSaveImage(source: ImageSource.gallery);
-                      if (path != null) setSheetState(() => imagePath = path);
-                    },
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: FuwaColors.creamWhite,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: FuwaColors.subtleBorder),
-                      ),
-                      child: imagePath != null
-                          ? ClipRRect(borderRadius: BorderRadius.circular(16), child: Image.file(File(imagePath!), fit: BoxFit.cover))
-                          : const Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                              Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 24)),
-                              Text('种草图', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 10)),
-                            ]),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text('单品名称 *', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: nameCtrl,
-                  decoration: InputDecoration(
-                    hintText: '如：白雪姬 JSK / 珍珠发带',
-                    filled: true,
-                    fillColor: FuwaColors.creamWhite,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('店家品牌', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12)),
-                          const SizedBox(height: 6),
-                          TextField(
-                            controller: shopCtrl,
-                            decoration: InputDecoration(
-                              hintText: '如：Baby / AP',
-                              filled: true,
-                              fillColor: FuwaColors.creamWhite,
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('预算 (元)', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12)),
-                          const SizedBox(height: 6),
-                          TextField(
-                            controller: budgetCtrl,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            decoration: InputDecoration(
-                              hintText: '如 2500',
-                              filled: true,
-                              fillColor: FuwaColors.creamWhite,
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Text('心动等级', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 8,
-                  children: AppConstants.desireLevels.map((lvl) {
-                    final isSel = desireLevel == lvl;
-                    return ChoiceChip(
-                      label: Text(lvl),
-                      selected: isSel,
-                      onSelected: (sel) {
-                        if (sel) setSheetState(() => desireLevel = lvl);
-                      },
-                      selectedColor: FuwaColors.balletPink,
-                      backgroundColor: FuwaColors.creamWhite,
-                      labelStyle: TextStyle(color: isSel ? Colors.white : FuwaColors.chocolateDark, fontSize: 11),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 12),
-                const Text('预计贩售时间（年-月）', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12)),
-                const SizedBox(height: 6),
-                GestureDetector(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2024),
-                      lastDate: DateTime(2030),
-                    );
-                    if (picked != null) {
-                      setSheetState(() => releaseDate = DateFormat('yyyy-MM').format(picked));
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(color: FuwaColors.creamWhite, borderRadius: BorderRadius.circular(14)),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(releaseDate, style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 13)),
-                        const Icon(Icons.calendar_month_rounded, size: 16, color: FuwaColors.balletPink),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      if (nameCtrl.text.trim().isEmpty) return;
-                      final budget = double.tryParse(budgetCtrl.text.trim()) ?? 0.0;
-                      final item = WishlistItem(
-                        name: nameCtrl.text.trim(),
-                        shopName: shopCtrl.text.trim(),
-                        budgetPrice: budget,
-                        imagePath: imagePath,
-                        releaseDate: releaseDate,
-                        desireLevel: desireLevel,
-                      );
-                      await _dbHelper.insertWishlistItem(item);
-                      if (mounted) {
-                        Navigator.pop(ctx);
-                        _loadWishlist();
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: FuwaColors.balletPink,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                    ),
-                    child: const Text('许愿收藏 ୨୧', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
