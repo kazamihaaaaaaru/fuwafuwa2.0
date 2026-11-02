@@ -1,0 +1,52 @@
+name: Build FuwaFuwa APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Recreate Android Project Configuration
+        run: |
+          rm -rf android
+          flutter create . --platforms=android --org=com.fuwafuwa --project-name=fuwafuwa
+          python3 -c "
+          p = 'android/app/src/main/AndroidManifest.xml'
+          content = open(p).read()
+          perms = '''
+              <uses-permission android:name=\"android.permission.CAMERA\" />
+              <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" android:maxSdkVersion=\"32\" />
+              <uses-permission android:name=\"android.permission.READ_MEDIA_IMAGES\" />
+          '''
+          content = content.replace('<application', perms + '    <application')
+          open(p, 'w').write(content)
+          "
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Android APK
+        run: flutter build apk --release
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FuwaFuwa-Release-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
