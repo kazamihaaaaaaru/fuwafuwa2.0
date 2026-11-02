@@ -645,6 +645,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           const SizedBox(height: 12),
           _buildSpecItem('体系', item.isLolita ? 'Lolita 洋装' : '地球人常服'),
           _buildSpecItem('品类', item.subCategory),
+          if (item.size != null && item.size!.isNotEmpty) _buildSpecItem('尺码', item.size!),
           if (item.isEarth && item.season != null && item.season!.isNotEmpty)
             _buildSpecItem('适用季节', item.season!),
           if (item.shopName != null && item.shopName!.isNotEmpty)

@@ -7,10 +7,10 @@ import '../models/wishlist_item.dart';
 
 /// 「ふわふわ（FuwaFuwa）」核心本地数据库辅助类
 /// 基于 SQLite 纯本地运行，严格隔离外部网络
-/// 版本 v2：支持待补款自动置顶、小物定尾制、心愿单管理、增量无缝平滑升级
+/// 版本 v3：支持服装尺码（size）、待补款自动置顶、小物定尾制、心愿单管理
 class DatabaseHelper {
   static const String _dbName = 'fuwafuwa.db';
-  static const int _dbVersion = 2;
+  static const int _dbVersion = 3; // 升级至 v3 支持尺码
 
   static const String tableItems = 'items';
   static const String tableAccessories = 'accessories';
@@ -53,6 +53,7 @@ class DatabaseHelper {
         subCategory TEXT NOT NULL,
         name TEXT NOT NULL,
         imagePath TEXT,
+        size TEXT,
         season TEXT,
         shopName TEXT,
         isDepositType INTEGER NOT NULL DEFAULT 0,
@@ -150,6 +151,13 @@ class DatabaseHelper {
       ''');
       await db.execute('CREATE INDEX IF NOT EXISTS idx_wishlist_desire ON $tableWishlist(desireLevel);');
     }
+
+    if (oldVersion < 3) {
+      // v3 升级：增加单品尺码字段（size），严格保留所有已有衣服数据
+      try {
+        await db.execute('ALTER TABLE $tableItems ADD COLUMN size TEXT;');
+      } catch (_) {}
+    }
   }
 
   // ==========================================
@@ -226,7 +234,6 @@ class DatabaseHelper {
     return Item.fromMap(maps.first, accessories: accessories);
   }
 
-  /// 多维度查询单品：待补尾款的裙子自动置顶！
   Future<List<Item>> getAllItems({
     String? category,
     String? subCategory,
@@ -257,7 +264,7 @@ class DatabaseHelper {
 
     final where = whereClauses.isEmpty ? null : whereClauses.join(' AND ');
 
-    // 核心优化 3：待补尾款（isDepositType=1 且 balanceDate 为空）自动置顶排序！
+    // 待补尾款自动置顶排序
     const orderClause =
         '(CASE WHEN isDepositType = 1 AND (balanceDate IS NULL OR trim(balanceDate) = "") THEN 0 ELSE 1 END) ASC, id DESC';
 
@@ -285,7 +292,7 @@ class DatabaseHelper {
   }
 
   // ==========================================
-  // 小物表 (Accessories) CRUD - 待补尾款自动置顶
+  // 小物表 (Accessories) CRUD
   // ==========================================
 
   Future<int> insertAccessory(Accessory accessory) async {
@@ -325,7 +332,6 @@ class DatabaseHelper {
     return Accessory.fromMap(maps.first);
   }
 
-  /// 获取小物列表：待补尾款的小物同样自动置顶！
   Future<List<Accessory>> getAllAccessories({
     String? accessoryType,
     String? searchQuery,
@@ -345,7 +351,6 @@ class DatabaseHelper {
 
     final where = whereClauses.isEmpty ? null : whereClauses.join(' AND ');
 
-    // 核心优化 3：待补尾款小物自动置顶！
     const orderClause =
         '(CASE WHEN isDepositType = 1 AND (balanceDate IS NULL OR trim(balanceDate) = "") THEN 0 ELSE 1 END) ASC, id DESC';
 
@@ -373,7 +378,7 @@ class DatabaseHelper {
   }
 
   // ==========================================
-  // 单品与小物多对多关联 (ItemAccessories)
+  // 单品与小物关联 (ItemAccessories)
   // ==========================================
 
   Future<List<Accessory>> getAccessoriesForItem(int itemId) async {
@@ -550,7 +555,6 @@ class DatabaseHelper {
 
     final sql = '''
       SELECT date, amount, category, title, paymentType, itemId, accessoryId FROM (
-        -- 全款现货单品
         SELECT 
           depositDate AS date,
           fullPrice AS amount,
@@ -564,7 +568,6 @@ class DatabaseHelper {
 
         UNION ALL
 
-        -- Lolita 定金支出
         SELECT 
           depositDate AS date,
           depositPrice AS amount,
@@ -578,7 +581,6 @@ class DatabaseHelper {
 
         UNION ALL
 
-        -- Lolita 尾款支出
         SELECT 
           balanceDate AS date,
           balancePrice AS amount,
@@ -592,7 +594,6 @@ class DatabaseHelper {
 
         UNION ALL
 
-        -- 小物全款现货
         SELECT 
           depositDate AS date,
           (CASE WHEN fullPrice > 0 THEN fullPrice ELSE price END) AS amount,
@@ -606,7 +607,6 @@ class DatabaseHelper {
 
         UNION ALL
 
-        -- 小物定金支出
         SELECT 
           depositDate AS date,
           depositPrice AS amount,
@@ -620,7 +620,6 @@ class DatabaseHelper {
 
         UNION ALL
 
-        -- 小物尾款支出
         SELECT 
           balanceDate AS date,
           balancePrice AS amount,

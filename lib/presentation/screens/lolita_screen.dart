@@ -11,10 +11,10 @@ import 'item_detail_screen.dart';
 
 /// Tab 1: 【Lolita 衣柜】(`LolitaScreen`)
 /// 严格遵循甘系（Sweet Lolita）视觉设计规范：
-/// - 顶部左侧简洁标题【Lolita 衣柜 ୨୧】，右上角展示件数徽标
+/// - 顶部标题【Lolita 衣柜 ୨୧】与经典标语【在廉价的生活里做着轻飘飘的少女梦】
 /// - 标题下方居中大书签横栏【洋装裙装】与【搭配小物】（舒展宽敞，告别局促）
-/// - 洋装展示拍立得双列照片墙与子类目胶囊（含 JK）
-/// - 小物展示饰品网格、定尾周期与已搭配裙装
+/// - 洋装展示拍立得双列照片墙与子类目胶囊（含 JK、裙撑与内搭独立分类）
+/// - 待补尾款单品自动置顶
 class LolitaScreen extends StatefulWidget {
   final VoidCallback? onAddDressTap;
   final VoidCallback? onAddAccessoryTap;
@@ -115,20 +115,34 @@ class _LolitaScreenState extends State<LolitaScreen>
       body: SafeArea(
         child: Column(
           children: [
-            // 1. 顶部标题栏：左侧【Lolita 衣柜 ୨୧】，右侧【X 件】徽标（与地球人衣柜统一）
+            // 1. 顶部艺术标题区与永恒经典名句
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Lolita 衣柜 ୨୧',
-                    style: TextStyle(
-                      color: FuwaColors.chocolateDark,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Lolita 衣柜 ୨୧',
+                        style: TextStyle(
+                          color: FuwaColors.chocolateDark,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        '在廉价的生活里做着轻飘飘的少女梦',
+                        style: TextStyle(
+                          color: FuwaColors.mutedRosyBrown,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -151,7 +165,7 @@ class _LolitaScreenState extends State<LolitaScreen>
               ),
             ),
 
-            // 2. 居中横置大书签分栏：【洋装裙装】与【搭配小物】（整栏居中展宽，从容呼吸）
+            // 2. 居中横置大书签分栏：【洋装裙装】与【搭配小物】（舒展宽敞，告别局促）
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Container(
@@ -225,7 +239,7 @@ class _LolitaScreenState extends State<LolitaScreen>
   }
 
   // ==========================================
-  // 第一页：洋装裙装（含 JK 选项）
+  // 第一页：洋装裙装（含 JK、裙撑与内搭独立分类）
   // ==========================================
 
   Widget _buildDressPageView() {

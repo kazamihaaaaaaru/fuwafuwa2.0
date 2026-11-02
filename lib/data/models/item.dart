@@ -8,8 +8,9 @@ class Item {
   final String subCategory;
   final String name;
   final String? imagePath;
+  final String? size; // 服装尺码：XS/S/M/L/均码/手写定制
   final String? season; // 地球人专用：春/夏/秋/冬/四季通用
-  final String? shopName; // Lolita 专用：品牌或店铺
+  final String? shopName; // 店铺/品牌名称（地球人与 Lolita 均支持）
   final bool isDepositType; // false: 全款现货, true: 定金尾款制
   final double fullPrice; // 全款金额
   final double depositPrice; // 定金金额
@@ -18,7 +19,7 @@ class Item {
   final String? balanceDate; // 尾款支付日期 (YYYY-MM-DD，为空表示待补款)
   final String? expectedDate; // 预计补款时间 (YYYY-MM-DD)
 
-  // 关联小物列表（多对多关联查询注入）
+  // 关联小物列表
   final List<Accessory> associatedAccessories;
 
   const Item({
@@ -27,6 +28,7 @@ class Item {
     required this.subCategory,
     required this.name,
     this.imagePath,
+    this.size,
     this.season,
     this.shopName,
     this.isDepositType = false,
@@ -39,14 +41,10 @@ class Item {
     this.associatedAccessories = const [],
   });
 
-  /// 是否为 Lolita 类别
   bool get isLolita => category == 'lolita';
-
-  /// 是否为地球人类别
   bool get isEarth => category == 'earth';
 
-  /// 规则 1：总支出计算（Total Cost）
-  /// 全款现货返回 fullPrice，定金尾款制返回 depositPrice + balancePrice
+  /// 总支出计算
   double get totalCost {
     if (isDepositType) {
       return depositPrice + balancePrice;
@@ -64,9 +62,7 @@ class Item {
     return isDepositType && (balanceDate != null && balanceDate!.trim().isNotEmpty);
   }
 
-  /// 规则 2：工期与等待时长计算（Waiting Duration）
-  /// - 待补尾款：当前日期与 depositDate 的天数差
-  /// - 已补尾款：balanceDate 与 depositDate 的天数差
+  /// 工期与等待时长计算
   int? get waitingDays {
     if (!isDepositType || depositDate == null || depositDate!.trim().isEmpty) {
       return null;
@@ -90,7 +86,6 @@ class Item {
   }
 
   /// 状态胶囊徽章文本
-  /// 待补款：“已等 X 天”；已补尾款：“工期 X 天”
   String? get durationBadgeText {
     final days = waitingDays;
     if (days == null) return null;
@@ -109,6 +104,7 @@ class Item {
       'subCategory': subCategory,
       'name': name,
       'imagePath': imagePath,
+      'size': size,
       'season': season,
       'shopName': shopName,
       'isDepositType': isDepositType ? 1 : 0,
@@ -128,6 +124,7 @@ class Item {
       subCategory: map['subCategory'] as String? ?? '其他',
       name: map['name'] as String? ?? '',
       imagePath: map['imagePath'] as String?,
+      size: map['size'] as String?,
       season: map['season'] as String?,
       shopName: map['shopName'] as String?,
       isDepositType: (map['isDepositType'] as int? ?? 0) == 1,
@@ -147,6 +144,7 @@ class Item {
     String? subCategory,
     String? name,
     String? imagePath,
+    String? size,
     String? season,
     String? shopName,
     bool? isDepositType,
@@ -164,6 +162,7 @@ class Item {
       subCategory: subCategory ?? this.subCategory,
       name: name ?? this.name,
       imagePath: imagePath ?? this.imagePath,
+      size: size ?? this.size,
       season: season ?? this.season,
       shopName: shopName ?? this.shopName,
       isDepositType: isDepositType ?? this.isDepositType,

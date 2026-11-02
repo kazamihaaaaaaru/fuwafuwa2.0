@@ -7,6 +7,16 @@ class AppConstants {
   static const String categoryLolita = 'lolita';
   static const String categoryAccessory = 'accessory';
 
+  // 服装尺码规范（Lolita 与地球人均通用）
+  static const List<String> clothingSizes = [
+    'XS',
+    'S',
+    'M',
+    'L',
+    '均码',
+    '其他',
+  ];
+
   // 地球人服饰子类目（含鞋、袜、帽子、包、伞）
   static const List<String> earthSubCategories = [
     '上衣',

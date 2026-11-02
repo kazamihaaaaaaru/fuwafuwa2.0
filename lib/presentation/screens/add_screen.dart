@@ -12,7 +12,7 @@ import '../../data/models/wishlist_item.dart';
 
 /// 模态页: 录入页面 (`AddScreen`)
 /// 严格遵循甘系（Sweet Lolita）视觉设计规范：
-/// - 单张照片拍摄/上传（自动压缩至 1080p 存入私有沙盒）
+/// - 支持服装尺码选择（XS/S/M/L/均码/手写其他）
 /// - 地球人与 Lolita 均支持记录【店铺/品牌】
 /// - 洋装子类目拆分裙撑与内搭，并包含 JK
 /// - 开关滑块纯白圆点配色，彻底去除生硬黑色
@@ -43,9 +43,11 @@ class _AddScreenState extends State<AddScreen> {
   late String _category;
   String _subCategory = 'JSK';
   String _season = '四季通用';
+  String _size = '均码'; // 默认均码
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _shopNameController = TextEditingController();
+  final TextEditingController _customSizeController = TextEditingController();
   final TextEditingController _fullPriceController = TextEditingController();
   final TextEditingController _depositPriceController = TextEditingController();
   final TextEditingController _balancePriceController = TextEditingController();
@@ -94,6 +96,7 @@ class _AddScreenState extends State<AddScreen> {
   void dispose() {
     _nameController.dispose();
     _shopNameController.dispose();
+    _customSizeController.dispose();
     _fullPriceController.dispose();
     _depositPriceController.dispose();
     _balancePriceController.dispose();
@@ -342,7 +345,6 @@ class _AddScreenState extends State<AddScreen> {
           ),
           const SizedBox(height: 14),
 
-          // 核心更新 4：地球人常服也支持记录店铺/品牌！
           _buildTextInput(
             label: '购买店铺 / 品牌',
             hint: isLolita ? '如：玻璃花信 / Baby / AP' : '如：Snidel / Zara / 淘宝原创店',
@@ -377,6 +379,48 @@ class _AddScreenState extends State<AddScreen> {
               );
             }).toList(),
           ),
+
+          const SizedBox(height: 16),
+
+          // 核心更新 1：服装尺码选择（XS/S/M/L/均码/手写其他）
+          const Text('服装尺码', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: AppConstants.clothingSizes.map((s) {
+              final isSel = _size == s;
+              return ChoiceChip(
+                label: Text(s),
+                selected: isSel,
+                onSelected: (selected) {
+                  if (selected) setState(() => _size = s);
+                },
+                selectedColor: FuwaColors.balletPink,
+                backgroundColor: FuwaColors.creamWhite,
+                labelStyle: TextStyle(
+                  color: isSel ? Colors.white : FuwaColors.chocolateDark,
+                  fontSize: 12,
+                  fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: isSel ? FuwaColors.balletPink : FuwaColors.subtleBorder),
+                ),
+              );
+            }).toList(),
+          ),
+
+          // 若选择“其他”，展开手写输入具体尺码
+          if (_size == '其他') ...[
+            const SizedBox(height: 10),
+            _buildTextInput(
+              label: '手写填入具体尺码',
+              hint: '如：XL / 定制量体尺码 / 38码 等',
+              controller: _customSizeController,
+            ),
+          ],
+
           if (!isLolita) ...[
             const SizedBox(height: 14),
             const Text('适用季节', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w600)),
@@ -820,13 +864,19 @@ class _AddScreenState extends State<AddScreen> {
     final balancePrice = double.tryParse(_balancePriceController.text.trim()) ?? 0.0;
     final shopNameText = _shopNameController.text.trim();
 
+    // 尺码逻辑：若选“其他”，取手写输入内容
+    final sizeVal = _size == '其他'
+        ? (_customSizeController.text.trim().isNotEmpty ? _customSizeController.text.trim() : '其他')
+        : _size;
+
     final newItem = Item(
       category: _category,
       subCategory: _subCategory,
       name: _nameController.text.trim(),
       imagePath: _imagePath,
+      size: sizeVal, // 保存服装尺码
       season: isLolita ? null : _season,
-      shopName: shopNameText.isNotEmpty ? shopNameText : null, // Lolita 与地球人均保存店铺品牌
+      shopName: shopNameText.isNotEmpty ? shopNameText : null,
       isDepositType: isLolita && _isDepositType,
       fullPrice: (!isLolita || !_isDepositType) ? fullPrice : 0.0,
       depositPrice: (isLolita && _isDepositType) ? depositPrice : 0.0,

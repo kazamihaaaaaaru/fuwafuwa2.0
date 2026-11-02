@@ -63,14 +63,28 @@ class _WishlistScreenState extends State<WishlistScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    '少女心愿单 ୨୧',
-                    style: TextStyle(
-                      color: FuwaColors.chocolateDark,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        '少女心愿单 ୨୧',
+                        style: TextStyle(
+                          color: FuwaColors.chocolateDark,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        '世界和光辉都据为己有好了',
+                        style: TextStyle(
+                          color: FuwaColors.mutedRosyBrown,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

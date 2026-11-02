@@ -111,7 +111,7 @@ class _EarthScreenState extends State<EarthScreen> {
                               ),
                               SizedBox(height: 2),
                               Text(
-                                '日常服饰、鞋帽包伞的温柔收纳',
+                                '在认清生活的本质后依旧热爱生活',
                                 style: TextStyle(
                                   color: FuwaColors.mutedRosyBrown,
                                   fontSize: 12,
