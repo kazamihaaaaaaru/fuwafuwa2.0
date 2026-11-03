@@ -641,7 +641,7 @@ class _LolitaScreenState extends State<LolitaScreen>
                         ),
                       ),
                       TextSpan(
-                        text: acc.totalCost.toStringAsFixed(0),
+                        text: AppConstants.formatPrice(acc.totalCost),
                         style: const TextStyle(
                           color: FuwaColors.chocolateDark,
                           fontSize: 15,
@@ -778,13 +778,13 @@ class _LolitaScreenState extends State<LolitaScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '总金额：¥${acc.totalCost.toStringAsFixed(0)}',
+                            '总金额：¥${AppConstants.formatPrice(acc.totalCost)}',
                             style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 15, fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             acc.isDepositType
-                                ? (acc.isPendingBalance ? '待补款 · 定金 ¥${acc.depositPrice.toStringAsFixed(0)}' : '已补款 · 工期 ${acc.waitingDays ?? 0} 天')
+                                ? (acc.isPendingBalance ? '待补款 · 定金 ¥${AppConstants.formatPrice(acc.depositPrice)}' : '已补款 · 工期 ${acc.waitingDays ?? 0} 天')
                                 : '现货全款 · ${acc.depositDate ?? ''}',
                             style: TextStyle(
                               color: acc.isPendingBalance ? FuwaColors.sugarCandyGold : FuwaColors.mutedRosyBrown,
@@ -827,7 +827,7 @@ class _LolitaScreenState extends State<LolitaScreen>
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         tileColor: FuwaColors.creamWhite,
                         title: Text(dress.name, style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 13, fontWeight: FontWeight.w700)),
-                        subtitle: Text('${dress.subCategory} · ¥${dress.totalCost.toStringAsFixed(0)}', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11)),
+                        subtitle: Text('${dress.subCategory} · ¥${AppConstants.formatPrice(dress.totalCost)}', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11)),
                         trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: FuwaColors.mutedRosyBrown),
                         onTap: () {
                           Navigator.pop(ctx);

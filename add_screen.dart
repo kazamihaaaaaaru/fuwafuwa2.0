@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -104,16 +105,16 @@ class _AddScreenState extends State<AddScreen> {
       // 付款模式
       _isDepositType = it.isDepositType;
       if (it.isDepositType) {
-        _depositPriceController.text = it.depositPrice > 0 ? it.depositPrice.toStringAsFixed(0) : '';
+        _depositPriceController.text = AppConstants.formatPriceInput(it.depositPrice);
         _depositDate = it.depositDate ?? DateFormat('yyyy-MM-dd').format(DateTime.now());
         _expectedDate = it.expectedDate;
         _hasPaidBalance = it.isCompletedBalance;
         if (it.isCompletedBalance) {
-          _balancePriceController.text = it.balancePrice > 0 ? it.balancePrice.toStringAsFixed(0) : '';
+          _balancePriceController.text = AppConstants.formatPriceInput(it.balancePrice);
           _balanceDate = it.balanceDate;
         }
       } else {
-        _fullPriceController.text = it.fullPrice > 0 ? it.fullPrice.toStringAsFixed(0) : '';
+        _fullPriceController.text = AppConstants.formatPriceInput(it.fullPrice);
         _purchaseDate = it.depositDate ?? DateFormat('yyyy-MM-dd').format(DateTime.now());
       }
 
@@ -139,8 +140,8 @@ class _AddScreenState extends State<AddScreen> {
       _nameController.text = wish.name;
       if (wish.shopName != null) _shopNameController.text = wish.shopName!;
       if (wish.budgetPrice > 0) {
-        _fullPriceController.text = wish.budgetPrice.toStringAsFixed(0);
-        _depositPriceController.text = (wish.budgetPrice * 0.4).toStringAsFixed(0);
+        _fullPriceController.text = AppConstants.formatPriceInput(wish.budgetPrice);
+        _depositPriceController.text = AppConstants.formatPriceInput(wish.budgetPrice * 0.4);
       }
       _imagePath = wish.imagePath;
     }
@@ -577,7 +578,7 @@ class _AddScreenState extends State<AddScreen> {
                 Expanded(
                   child: _buildNumberInput(
                     label: '定金金额 (元) *',
-                    hint: '如 300',
+                    hint: '如 300.00',
                     controller: _depositPriceController,
                     validator: (v) => (_isDepositType && (v == null || v.trim().isEmpty)) ? '请输入定金' : null,
                   ),
@@ -638,7 +639,7 @@ class _AddScreenState extends State<AddScreen> {
                   Expanded(
                     child: _buildNumberInput(
                       label: '实付尾款金额 (元)',
-                      hint: '如 450',
+                      hint: '如 450.50',
                       controller: _balancePriceController,
                     ),
                   ),
@@ -659,7 +660,7 @@ class _AddScreenState extends State<AddScreen> {
                 Expanded(
                   child: _buildNumberInput(
                     label: '全款金额 (元) *',
-                    hint: '如 780',
+                    hint: '如 780.00',
                     controller: _fullPriceController,
                     validator: (v) => (!_isDepositType && (v == null || v.trim().isEmpty)) ? '请输入金额' : null,
                   ),
@@ -872,6 +873,9 @@ class _AddScreenState extends State<AddScreen> {
           child: TextFormField(
             controller: controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+            ],
             cursorColor: FuwaColors.balletPink,
             style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w700),
             decoration: InputDecoration(

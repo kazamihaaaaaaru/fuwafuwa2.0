@@ -73,4 +73,24 @@ class AppConstants {
     '很心动 ୨୧',
     '还在观望 ~',
   ];
+
+  /// 价格金额展示格式化（整数显示整数，小数保留两位，杜绝抹零）
+  static String formatPrice(double val) {
+    if (val <= 0) return '0';
+    if (val % 1 == 0) {
+      return val.toInt().toString();
+    } else {
+      return val.toStringAsFixed(2);
+    }
+  }
+
+  /// 价格输入框预填格式化
+  static String formatPriceInput(double val) {
+    if (val <= 0) return '';
+    if (val % 1 == 0) {
+      return val.toInt().toString();
+    } else {
+      return val.toStringAsFixed(2);
+    }
+  }
 }
