@@ -1,3 +1,4 @@
+import '../../core/constants/app_constants.dart';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -682,7 +683,7 @@ class _WardrobeStatisticsScreenState extends State<WardrobeStatisticsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '¥${acc.totalCost.toStringAsFixed(0)}',
+                '¥${AppConstants.formatPrice(acc.totalCost)}',
                 style: const TextStyle(
                   color: FuwaColors.chocolateDark,
                   fontSize: 14,

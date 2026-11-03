@@ -1,0 +1,30 @@
+name: fuwafuwa
+description: "A local-only Android wardrobe archive app for Sweet Lolita and daily fashion enthusiasts."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # 本地 SQLite 关系型存储
+  sqflite: ^2.3.0
+  path: ^1.9.0
+  path_provider: ^2.1.2
+
+  # 图片选取与硬件压缩（内置 1080p / 85% 压缩能力）
+  image_picker: ^1.0.7
+
+  # 日期格式化与通用工具
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

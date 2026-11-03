@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -50,7 +51,7 @@ class _AddWishlistScreenState extends State<AddWishlistScreen> {
       final it = widget.itemToEdit!;
       _nameCtrl.text = it.name;
       _shopCtrl.text = it.shopName ?? '';
-      _budgetCtrl.text = it.budgetPrice > 0 ? it.budgetPrice.toStringAsFixed(0) : '';
+      _budgetCtrl.text = AppConstants.formatPriceInput(it.budgetPrice);
       _noteCtrl.text = it.note ?? '';
       _desireLevel = it.desireLevel;
       _releaseDate = it.releaseDate ?? DateFormat('yyyy-MM').format(DateTime.now());
@@ -438,6 +439,9 @@ class _AddWishlistScreenState extends State<AddWishlistScreen> {
           child: TextFormField(
             controller: controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+            ],
             cursorColor: FuwaColors.balletPink,
             style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w700),
             decoration: InputDecoration(

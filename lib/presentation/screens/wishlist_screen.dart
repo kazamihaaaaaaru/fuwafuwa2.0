@@ -327,7 +327,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              item.budgetPrice > 0 ? '预算 ¥${item.budgetPrice.toStringAsFixed(0)}' : '未定预算',
+              item.budgetPrice > 0 ? '预算 ¥${AppConstants.formatPrice(item.budgetPrice)}' : '未定预算',
               style: const TextStyle(
                 color: FuwaColors.chocolateDark,
                 fontSize: 14,
@@ -432,7 +432,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       children: [
                         Text('店家品牌：${item.shopName ?? '未填写'}', style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 13, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 3),
-                        Text('预算金额：¥${item.budgetPrice.toStringAsFixed(0)}', style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 13, fontWeight: FontWeight.w700)),
+                        Text('预算金额：¥${AppConstants.formatPrice(item.budgetPrice)}', style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 13, fontWeight: FontWeight.w700)),
                         const SizedBox(height: 3),
                         Text('预计贩售时间：${item.releaseDate ?? '待定'}', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11)),
                       ],

@@ -1,3 +1,4 @@
+import '../../core/constants/app_constants.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../core/theme/fuwa_colors.dart';
@@ -179,7 +180,7 @@ class PolaroidCard extends StatelessWidget {
                         ),
                       ),
                       TextSpan(
-                        text: item.totalCost.toStringAsFixed(0),
+                        text: AppConstants.formatPrice(item.totalCost),
                         style: const TextStyle(
                           color: FuwaColors.chocolateDark,
                           fontSize: 16,

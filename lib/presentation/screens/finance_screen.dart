@@ -1,3 +1,4 @@
+import '../../core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/fuwa_colors.dart';
 import '../../data/database/database_helper.dart';
@@ -423,7 +424,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     children: [
                       const TextSpan(text: '¥', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w700)),
                       TextSpan(
-                        text: _summary.totalWardrobeAsset.toStringAsFixed(0),
+                        text: AppConstants.formatPrice(_summary.totalWardrobeAsset),
                         style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 24, fontWeight: FontWeight.w800),
                       ),
                     ],
@@ -468,7 +469,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         ),
                       ),
                       TextSpan(
-                        text: _summary.pendingBalanceTotal.toStringAsFixed(0),
+                        text: AppConstants.formatPrice(_summary.pendingBalanceTotal),
                         style: TextStyle(
                           color: _summary.pendingBalanceTotal > 0 ? FuwaColors.sugarCandyGold : FuwaColors.chocolateDark,
                           fontSize: 24,
@@ -528,7 +529,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(title, style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w600)),
-            Text('¥${amount.toStringAsFixed(0)} (${(pct * 100).toStringAsFixed(1)}%)', style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w700)),
+            Text('¥${AppConstants.formatPrice(amount)} (${(pct * 100).toStringAsFixed(1)}%)', style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w700)),
           ],
         ),
         const SizedBox(height: 5),
@@ -607,7 +608,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                                 Text('$count 笔', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11)),
                               ],
                             ),
-                            Text('¥${amt.toStringAsFixed(0)}', style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w800)),
+                            Text('¥${AppConstants.formatPrice(amt)}', style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w800)),
                           ],
                         ),
                         const SizedBox(height: 6),
@@ -674,7 +675,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   children: [
                     const Text('年度总支出', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 4),
-                    Text('¥${yearTotal.toStringAsFixed(0)}', style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 22, fontWeight: FontWeight.w800)),
+                    Text('¥${AppConstants.formatPrice(yearTotal)}', style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 22, fontWeight: FontWeight.w800)),
                   ],
                 ),
               ),
@@ -686,7 +687,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   children: [
                     const Text('月均支出', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 4),
-                    Text('¥${monthlyAvg.toStringAsFixed(0)}', style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 22, fontWeight: FontWeight.w800)),
+                    Text('¥${AppConstants.formatPrice(monthlyAvg)}', style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 22, fontWeight: FontWeight.w800)),
                   ],
                 ),
               ),
@@ -805,7 +806,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                                 Text('$count 笔', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 10)),
                               ],
                             ),
-                            Text('¥${amt.toStringAsFixed(0)}', style: TextStyle(color: isSel ? FuwaColors.strawberryPink : FuwaColors.chocolateDark, fontSize: 13, fontWeight: FontWeight.w700)),
+                            Text('¥${AppConstants.formatPrice(amt)}', style: TextStyle(color: isSel ? FuwaColors.strawberryPink : FuwaColors.chocolateDark, fontSize: 13, fontWeight: FontWeight.w700)),
                           ],
                         ),
                         const SizedBox(height: 6),
@@ -850,6 +851,35 @@ class _FinanceScreenState extends State<FinanceScreen> {
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final r = records[index];
+            final isDeposit = r.paymentType == '定金';
+            final isBalance = r.paymentType == '尾款';
+            String typeBadge;
+            if (isDeposit) {
+              typeBadge = '定金';
+            } else if (isBalance) {
+              typeBadge = '尾款';
+            } else if (r.paymentType == '小物') {
+              typeBadge = '饰品';
+            } else {
+              typeBadge = '现货';
+            }
+
+            String catText;
+            switch (r.category) {
+              case 'lolita':
+                catText = '洋装';
+                break;
+              case 'earth':
+                catText = '常服';
+                break;
+              case 'accessory':
+                catText = '搭配小物';
+                break;
+              default:
+                catText = '衣柜单品';
+                break;
+            }
+
             return Container(
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -864,17 +894,17 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: r.isDeposit
+                      color: isDeposit
                           ? FuwaColors.apricotCream
-                          : (r.isBalance ? FuwaColors.balletPink.withOpacity(0.15) : FuwaColors.creamWhite),
+                          : (isBalance ? FuwaColors.balletPink.withOpacity(0.15) : FuwaColors.creamWhite),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      r.typeBadge,
+                      typeBadge,
                       style: TextStyle(
-                        color: r.isDeposit
+                        color: isDeposit
                             ? FuwaColors.chocolateDark
-                            : (r.isBalance ? FuwaColors.balletPink : FuwaColors.chocolateDark),
+                            : (isBalance ? FuwaColors.balletPink : FuwaColors.chocolateDark),
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),
@@ -897,7 +927,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${r.date} · ${r.categoryText}',
+                          '${r.date} · $catText',
                           style: const TextStyle(
                             color: FuwaColors.mutedRosyBrown,
                             fontSize: 11,
@@ -918,7 +948,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                           ),
                         ),
                         TextSpan(
-                          text: r.amount.toStringAsFixed(0),
+                          text: AppConstants.formatPrice(r.amount),
                           style: const TextStyle(
                             color: FuwaColors.chocolateDark,
                             fontSize: 16,

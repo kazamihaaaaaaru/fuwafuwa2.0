@@ -1,3 +1,4 @@
+import '../../core/constants/app_constants.dart';
 import 'add_screen.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -369,7 +370,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       ),
                     ),
                     TextSpan(
-                      text: item.totalCost.toStringAsFixed(0),
+                      text: AppConstants.formatPrice(item.totalCost),
                       style: const TextStyle(
                         color: FuwaColors.chocolateDark,
                         fontSize: 22,
@@ -657,7 +658,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              isPaid ? '¥${amount.toStringAsFixed(0)}' : (amount > 0 ? '¥${amount.toStringAsFixed(0)}' : '--'),
+              isPaid ? '¥${AppConstants.formatPrice(amount)}' : (amount > 0 ? '¥${AppConstants.formatPrice(amount)}' : '--'),
               style: const TextStyle(
                 color: FuwaColors.chocolateDark,
                 fontSize: 15,
@@ -927,7 +928,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           ),
           // 价格
           Text(
-            '¥${acc.price.toStringAsFixed(0)}',
+            '¥${AppConstants.formatPrice(acc.price)}',
             style: const TextStyle(
               color: FuwaColors.mutedRosyBrown,
               fontSize: 10,
@@ -946,7 +947,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   /// 【记录补款】弹窗：输入实付尾款金额和日期，一键转为已出货
   Future<void> _showRecordBalanceDialog(Item item) async {
     final balanceController = TextEditingController(
-      text: item.balancePrice > 0 ? item.balancePrice.toStringAsFixed(0) : '',
+      text: item.balancePrice > 0 ? AppConstants.formatPriceInput(item.balancePrice) : '',
     );
     String selectedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
@@ -1258,7 +1259,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                           ),
                                         ),
                                         Text(
-                                          '${acc.accessoryType} · ¥${acc.price.toStringAsFixed(0)}',
+                                          '${acc.accessoryType} · ¥${AppConstants.formatPrice(acc.price)}',
                                           style: const TextStyle(
                                             color: FuwaColors.mutedRosyBrown,
                                             fontSize: 11,

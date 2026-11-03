@@ -19,6 +19,29 @@ class FinanceRecord {
     this.accessoryId,
   });
 
+  bool get isDeposit => paymentType == '定金';
+  bool get isBalance => paymentType == '尾款';
+
+  String get typeBadge {
+    if (isDeposit) return '定金';
+    if (isBalance) return '尾款';
+    if (paymentType == '小物') return '饰品';
+    return '现货';
+  }
+
+  String get categoryText {
+    switch (category) {
+      case 'lolita':
+        return '洋装';
+      case 'earth':
+        return '常服';
+      case 'accessory':
+        return '搭配小物';
+      default:
+        return '衣柜单品';
+    }
+  }
+
   factory FinanceRecord.fromMap(Map<String, dynamic> map) {
     return FinanceRecord(
       date: map['date'] as String? ?? '',
@@ -50,6 +73,7 @@ class FinanceSummary {
     this.accessoryTotal = 0.0,
   });
 
+  double get pendingBalanceTotal => pendingBalanceEstimate;
   double get earthRatio => totalWardrobeAsset > 0 ? (earthTotal / totalWardrobeAsset) : 0.0;
   double get lolitaRatio => totalWardrobeAsset > 0 ? (lolitaTotal / totalWardrobeAsset) : 0.0;
   double get accessoryRatio => totalWardrobeAsset > 0 ? (accessoryTotal / totalWardrobeAsset) : 0.0;
