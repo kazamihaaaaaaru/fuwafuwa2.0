@@ -52,11 +52,12 @@ class AppConstants {
     '四季通用',
   ];
 
-  // 小物类型
+  // 小物类型（已加入“帽子”）
   static const List<String> accessoryTypes = [
     'KC',
     'BNT',
     '发带',
+    '帽子',
     '边夹',
     '手袖',
     '袜',

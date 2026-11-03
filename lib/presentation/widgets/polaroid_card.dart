@@ -123,6 +123,26 @@ class PolaroidCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (item.color != null && item.color!.trim().isNotEmpty) ...[
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: FuwaColors.paleRose,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      item.color!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: FuwaColors.strawberryPink,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
                 if (item.shopName != null && item.shopName!.trim().isNotEmpty) ...[
                   const SizedBox(width: 4),
                   Expanded(

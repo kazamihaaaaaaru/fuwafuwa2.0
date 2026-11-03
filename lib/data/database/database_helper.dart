@@ -7,10 +7,10 @@ import '../models/wishlist_item.dart';
 
 /// 「ふわふわ（FuwaFuwa）」核心本地数据库辅助类
 /// 基于 SQLite 纯本地运行，严格隔离外部网络
-/// 版本 v3：支持服装尺码（size）、待补款自动置顶、小物定尾制、心愿单管理
+/// 版本 v4：支持尾款/全款最后付款日期降序排列（待补款置顶）、颜色标签、饰品品牌、完整备份导出与导入
 class DatabaseHelper {
   static const String _dbName = 'fuwafuwa.db';
-  static const int _dbVersion = 3; // 升级至 v3 支持尺码
+  static const int _dbVersion = 4; // 升级至 v4
 
   static const String tableItems = 'items';
   static const String tableAccessories = 'accessories';
@@ -53,6 +53,7 @@ class DatabaseHelper {
         subCategory TEXT NOT NULL,
         name TEXT NOT NULL,
         imagePath TEXT,
+        color TEXT,
         size TEXT,
         season TEXT,
         shopName TEXT,
@@ -72,6 +73,7 @@ class DatabaseHelper {
         name TEXT NOT NULL,
         imagePath TEXT,
         accessoryType TEXT NOT NULL,
+        shopName TEXT,
         price REAL DEFAULT 0.0,
         purchaseDate TEXT,
         isDepositType INTEGER NOT NULL DEFAULT 0,
@@ -153,15 +155,24 @@ class DatabaseHelper {
     }
 
     if (oldVersion < 3) {
-      // v3 升级：增加单品尺码字段（size），严格保留所有已有衣服数据
       try {
         await db.execute('ALTER TABLE $tableItems ADD COLUMN size TEXT;');
+      } catch (_) {}
+    }
+
+    if (oldVersion < 4) {
+      // v4 升级：衣服增加颜色字段（color），饰品增加店铺品牌字段（shopName）
+      try {
+        await db.execute('ALTER TABLE $tableItems ADD COLUMN color TEXT;');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE $tableAccessories ADD COLUMN shopName TEXT;');
       } catch (_) {}
     }
   }
 
   // ==========================================
-  // 单品表 (Items) CRUD - 待补尾款自动置顶
+  // 单品表 (Items) CRUD - 尾款/全款日期降序（待补款置顶）
   // ==========================================
 
   Future<int> insertItem(Item item, {List<int>? accessoryIds}) async {
@@ -234,6 +245,8 @@ class DatabaseHelper {
     return Item.fromMap(maps.first, accessories: accessories);
   }
 
+  /// 多维度查询单品：
+  /// 规则 1：待补尾款置顶；已完成的单品按最终实际付款日期（尾款日或全款日）降序排列！
   Future<List<Item>> getAllItems({
     String? category,
     String? subCategory,
@@ -257,16 +270,20 @@ class DatabaseHelper {
       whereArgs.add(season);
     }
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
-      whereClauses.add('(name LIKE ? OR shopName LIKE ?)');
+      whereClauses.add('(name LIKE ? OR shopName LIKE ? OR color LIKE ?)');
+      whereArgs.add('%${searchQuery.trim()}%');
       whereArgs.add('%${searchQuery.trim()}%');
       whereArgs.add('%${searchQuery.trim()}%');
     }
 
     final where = whereClauses.isEmpty ? null : whereClauses.join(' AND ');
 
-    // 待补尾款自动置顶排序
-    const orderClause =
-        '(CASE WHEN isDepositType = 1 AND (balanceDate IS NULL OR trim(balanceDate) = "") THEN 0 ELSE 1 END) ASC, id DESC';
+    // 核心优化 1：待付尾款置顶，其它按尾款/全款最后付款日期降序排列
+    const orderClause = '''
+      (CASE WHEN isDepositType = 1 AND (balanceDate IS NULL OR trim(balanceDate) = '') THEN 0 ELSE 1 END) ASC,
+      COALESCE(CASE WHEN isDepositType = 1 THEN balanceDate ELSE depositDate END, depositDate, '') DESC,
+      id DESC
+    ''';
 
     final maps = await db.query(
       tableItems,
@@ -292,23 +309,52 @@ class DatabaseHelper {
   }
 
   // ==========================================
-  // 小物表 (Accessories) CRUD
+  // 小物表 (Accessories) CRUD - 尾款/全款日期降序（待补款置顶）
   // ==========================================
 
-  Future<int> insertAccessory(Accessory accessory) async {
+  Future<int> insertAccessory(Accessory accessory, {List<int>? itemIds}) async {
     final db = await database;
-    return await db.insert(tableAccessories, accessory.toMap());
+    return await db.transaction((txn) async {
+      final accId = await txn.insert(tableAccessories, accessory.toMap());
+      if (itemIds != null && itemIds.isNotEmpty) {
+        for (final itemId in itemIds) {
+          await txn.insert(
+            tableItemAccessories,
+            {'itemId': itemId, 'accessoryId': accId},
+            conflictAlgorithm: ConflictAlgorithm.ignore,
+          );
+        }
+      }
+      return accId;
+    });
   }
 
-  Future<int> updateAccessory(Accessory accessory) async {
+  Future<int> updateAccessory(Accessory accessory, {List<int>? itemIds}) async {
     final db = await database;
     if (accessory.id == null) return 0;
-    return await db.update(
-      tableAccessories,
-      accessory.toMap(),
-      where: 'id = ?',
-      whereArgs: [accessory.id],
-    );
+    return await db.transaction((txn) async {
+      final rows = await txn.update(
+        tableAccessories,
+        accessory.toMap(),
+        where: 'id = ?',
+        whereArgs: [accessory.id],
+      );
+      if (itemIds != null) {
+        await txn.delete(
+          tableItemAccessories,
+          where: 'accessoryId = ?',
+          whereArgs: [accessory.id],
+        );
+        for (final itemId in itemIds) {
+          await txn.insert(
+            tableItemAccessories,
+            {'itemId': itemId, 'accessoryId': accessory.id},
+            conflictAlgorithm: ConflictAlgorithm.ignore,
+          );
+        }
+      }
+      return rows;
+    });
   }
 
   Future<int> deleteAccessory(int id) async {
@@ -332,6 +378,7 @@ class DatabaseHelper {
     return Accessory.fromMap(maps.first);
   }
 
+  /// 获取小物列表：待补尾款小物置顶，已完成的按最后付款日期降序
   Future<List<Accessory>> getAllAccessories({
     String? accessoryType,
     String? searchQuery,
@@ -345,14 +392,18 @@ class DatabaseHelper {
       whereArgs.add(accessoryType);
     }
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
-      whereClauses.add('name LIKE ?');
+      whereClauses.add('(name LIKE ? OR shopName LIKE ?)');
+      whereArgs.add('%${searchQuery.trim()}%');
       whereArgs.add('%${searchQuery.trim()}%');
     }
 
     final where = whereClauses.isEmpty ? null : whereClauses.join(' AND ');
 
-    const orderClause =
-        '(CASE WHEN isDepositType = 1 AND (balanceDate IS NULL OR trim(balanceDate) = "") THEN 0 ELSE 1 END) ASC, id DESC';
+    const orderClause = '''
+      (CASE WHEN isDepositType = 1 AND (balanceDate IS NULL OR trim(balanceDate) = '') THEN 0 ELSE 1 END) ASC,
+      COALESCE(CASE WHEN isDepositType = 1 THEN balanceDate ELSE depositDate END, depositDate, '') DESC,
+      id DESC
+    ''';
 
     final maps = await db.query(
       tableAccessories,
@@ -637,6 +688,75 @@ class DatabaseHelper {
 
     final maps = await db.rawQuery(sql);
     return maps.map((m) => FinanceRecord.fromMap(m)).toList();
+  }
+
+  // ==========================================
+  // 数据全量备份与迁移恢复（Backup & Restore）
+  // ==========================================
+
+  /// 导出数据库全量原始数据
+  Future<Map<String, dynamic>> exportRawData() async {
+    final db = await database;
+    final items = await db.query(tableItems);
+    final accessories = await db.query(tableAccessories);
+    final itemAccessories = await db.query(tableItemAccessories);
+    final wishlist = await db.query(tableWishlist);
+
+    return {
+      'app': 'FuwaFuwa',
+      'version': _dbVersion,
+      'items': items,
+      'accessories': accessories,
+      'itemAccessories': itemAccessories,
+      'wishlist': wishlist,
+    };
+  }
+
+  /// 导入并恢复备份数据（事务保证原子性）
+  Future<int> importRawData(Map<String, dynamic> data) async {
+    final db = await database;
+
+    final itemsList = (data['items'] as List<dynamic>?) ?? [];
+    final accessoriesList = (data['accessories'] as List<dynamic>?) ?? [];
+    final itemAccessoriesList = (data['itemAccessories'] as List<dynamic>?) ?? [];
+    final wishlistList = (data['wishlist'] as List<dynamic>?) ?? [];
+
+    return await db.transaction((txn) async {
+      int importedCount = 0;
+
+      // 1. 恢复 items
+      for (final raw in itemsList) {
+        if (raw is Map<String, dynamic>) {
+          await txn.insert(tableItems, raw, conflictAlgorithm: ConflictAlgorithm.replace);
+          importedCount++;
+        }
+      }
+
+      // 2. 恢复 accessories
+      for (final raw in accessoriesList) {
+        if (raw is Map<String, dynamic>) {
+          await txn.insert(tableAccessories, raw, conflictAlgorithm: ConflictAlgorithm.replace);
+          importedCount++;
+        }
+      }
+
+      // 3. 恢复 item_accessories 关联
+      for (final raw in itemAccessoriesList) {
+        if (raw is Map<String, dynamic>) {
+          await txn.insert(tableItemAccessories, raw, conflictAlgorithm: ConflictAlgorithm.replace);
+        }
+      }
+
+      // 4. 恢复 wishlist
+      for (final raw in wishlistList) {
+        if (raw is Map<String, dynamic>) {
+          await txn.insert(tableWishlist, raw, conflictAlgorithm: ConflictAlgorithm.replace);
+          importedCount++;
+        }
+      }
+
+      return importedCount;
+    });
   }
 
   Future<void> close() async {

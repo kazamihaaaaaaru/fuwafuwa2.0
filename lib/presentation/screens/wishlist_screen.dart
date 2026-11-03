@@ -7,6 +7,7 @@ import '../../data/models/wishlist_item.dart';
 import '../widgets/fuwa_animations.dart';
 import 'add_screen.dart';
 import 'add_wishlist_screen.dart';
+import 'add_accessory_screen.dart';
 
 /// Tab 3: 全新【心愿单】(`WishlistScreen`)
 /// 严格遵循甘系（Sweet Lolita）视觉设计规范：
@@ -510,15 +511,90 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 
   Future<void> _transferToWardrobe(WishlistItem item) async {
-    final added = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => AddScreen(
-          prefilledWishlistItem: item,
+    // 弹出双选弹窗：转入洋装/常服衣柜 还是 转入搭配小物箱
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: FuwaColors.pureWhite,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: const [
+                  Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 14)),
+                  SizedBox(width: 8),
+                  Text('请选择转入目标 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w800)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text('准备将心愿单「${item.name}」收纳至何处？', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 12)),
+              const SizedBox(height: 16),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                tileColor: FuwaColors.creamWhite,
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: FuwaColors.pureWhite, shape: BoxShape.circle, boxShadow: FuwaColors.softCardShadow),
+                  child: const Icon(Icons.checkroom_rounded, color: FuwaColors.balletPink, size: 20),
+                ),
+                title: const Text('转入洋装 / 常服衣柜 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w700)),
+                subtitle: const Text('归入洋装裙装或日常常服档案', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11)),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: FuwaColors.mutedRosyBrown),
+                onTap: () => Navigator.pop(ctx, 'wardrobe'),
+              ),
+              const SizedBox(height: 10),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                tileColor: FuwaColors.creamWhite,
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: FuwaColors.pureWhite, shape: BoxShape.circle, boxShadow: FuwaColors.softCardShadow),
+                  child: const Icon(Icons.auto_awesome_rounded, color: FuwaColors.balletPink, size: 20),
+                ),
+                title: const Text('转入搭配小物箱 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w700)),
+                subtitle: const Text('归入KC、发带、帽子、手袖等饰品库', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11)),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: FuwaColors.mutedRosyBrown),
+                onTap: () => Navigator.pop(ctx, 'accessory'),
+              ),
+            ],
+          ),
         ),
       ),
     );
+
+    if (choice == null) return;
+
+    bool? added;
+    if (choice == 'wardrobe') {
+      added = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => AddScreen(
+            prefilledWishlistItem: item,
+          ),
+        ),
+      );
+    } else if (choice == 'accessory') {
+      added = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => AddAccessoryScreen(
+            prefilledWishlistItem: item,
+          ),
+        ),
+      );
+    }
 
     if (added == true && mounted) {
       widget.onWardrobeUpdated?.call();
@@ -527,8 +603,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
         builder: (ctx) => AlertDialog(
           backgroundColor: FuwaColors.pureWhite,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('已成功收纳进衣柜 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w700)),
-          content: Text('已为您在衣柜中建立档案，是否自动从心愿单移出「${item.name}」？', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 13)),
+          title: const Text('已成功收纳 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w700)),
+          content: Text('已为您建立档案，是否自动从心愿单移出「${item.name}」？', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 13)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
@@ -547,7 +623,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
         ),
       );
 
-      if (remove == true) {
+      if (remove == true && item.id != null) {
         await _dbHelper.deleteWishlistItem(item.id!);
         _loadWishlist();
       }

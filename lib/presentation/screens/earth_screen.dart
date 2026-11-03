@@ -1,3 +1,4 @@
+import 'wardrobe_statistics_screen.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/fuwa_colors.dart';
@@ -120,22 +121,60 @@ class _EarthScreenState extends State<EarthScreen> {
                               ),
                             ],
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: FuwaColors.pureWhite,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: FuwaColors.softCardShadow,
-                              border: Border.all(color: FuwaColors.subtleBorder),
-                            ),
-                            child: Text(
-                              '${_items.length} 件',
-                              style: const TextStyle(
-                                color: FuwaColors.chocolateDark,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const WardrobeStatisticsScreen(category: 'earth'),
+                                  ),
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: FuwaColors.pureWhite,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: FuwaColors.softCardShadow,
+                                    border: Border.all(color: FuwaColors.subtleBorder),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: const [
+                                      Icon(Icons.pie_chart_outline_rounded, size: 14, color: FuwaColors.balletPink),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        '常服统计 ୨୧',
+                                        style: TextStyle(
+                                          color: FuwaColors.chocolateDark,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: FuwaColors.pureWhite,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: FuwaColors.softCardShadow,
+                                  border: Border.all(color: FuwaColors.subtleBorder),
+                                ),
+                                child: Text(
+                                  '${_items.length} 件',
+                                  style: const TextStyle(
+                                    color: FuwaColors.chocolateDark,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

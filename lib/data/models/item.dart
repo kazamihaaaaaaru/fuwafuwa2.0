@@ -8,6 +8,7 @@ class Item {
   final String subCategory;
   final String name;
   final String? imagePath;
+  final String? color; // 衣服颜色标签（如：生成色/萨克斯蓝/黑色/纯白等）
   final String? size; // 服装尺码：XS/S/M/L/均码/手写定制
   final String? season; // 地球人专用：春/夏/秋/冬/四季通用
   final String? shopName; // 店铺/品牌名称（地球人与 Lolita 均支持）
@@ -28,6 +29,7 @@ class Item {
     required this.subCategory,
     required this.name,
     this.imagePath,
+    this.color,
     this.size,
     this.season,
     this.shopName,
@@ -104,6 +106,7 @@ class Item {
       'subCategory': subCategory,
       'name': name,
       'imagePath': imagePath,
+      'color': color,
       'size': size,
       'season': season,
       'shopName': shopName,
@@ -124,6 +127,7 @@ class Item {
       subCategory: map['subCategory'] as String? ?? '其他',
       name: map['name'] as String? ?? '',
       imagePath: map['imagePath'] as String?,
+      color: map['color'] as String?,
       size: map['size'] as String?,
       season: map['season'] as String?,
       shopName: map['shopName'] as String?,
@@ -144,6 +148,7 @@ class Item {
     String? subCategory,
     String? name,
     String? imagePath,
+    String? color,
     String? size,
     String? season,
     String? shopName,
@@ -162,6 +167,7 @@ class Item {
       subCategory: subCategory ?? this.subCategory,
       name: name ?? this.name,
       imagePath: imagePath ?? this.imagePath,
+      color: color ?? this.color,
       size: size ?? this.size,
       season: season ?? this.season,
       shopName: shopName ?? this.shopName,

@@ -1,10 +1,11 @@
 /// 小物（Accessory）模型
-/// 独立管理，支持多对多绑定，支持现货全款与定金尾款制
+/// 独立管理，支持多对多绑定，支持现货全款与定金尾款制，支持记录品牌/店铺
 class Accessory {
   final int? id;
   final String name;
   final String? imagePath;
   final String accessoryType;
+  final String? shopName; // 店铺/品牌名称
   final bool isDepositType; // false: 全款现货, true: 定金尾款制
   final double fullPrice; // 全款金额
   final double depositPrice; // 定金金额
@@ -18,6 +19,7 @@ class Accessory {
     required this.name,
     this.imagePath,
     required this.accessoryType,
+    this.shopName,
     this.isDepositType = false,
     this.fullPrice = 0.0,
     this.depositPrice = 0.0,
@@ -27,9 +29,8 @@ class Accessory {
     this.expectedDate,
   });
 
-  /// 兼容旧版单一价格字段
   double get price => totalCost;
-  String? get purchaseDate => isDepositType ? depositDate : depositDate;
+  String? get purchaseDate => depositDate;
 
   /// 总支出计算
   double get totalCost {
@@ -90,6 +91,7 @@ class Accessory {
       'name': name,
       'imagePath': imagePath,
       'accessoryType': accessoryType,
+      'shopName': shopName,
       'isDepositType': isDepositType ? 1 : 0,
       'fullPrice': fullPrice,
       'depositPrice': depositPrice,
@@ -97,7 +99,7 @@ class Accessory {
       'balancePrice': balancePrice,
       'balanceDate': balanceDate,
       'expectedDate': expectedDate,
-      'price': totalCost, // 保持数据库旧字段平滑兼容
+      'price': totalCost,
       'purchaseDate': depositDate,
     };
   }
@@ -112,6 +114,7 @@ class Accessory {
       name: map['name'] as String? ?? '',
       imagePath: map['imagePath'] as String?,
       accessoryType: map['accessoryType'] as String? ?? '其他',
+      shopName: map['shopName'] as String?,
       isDepositType: isDeposit,
       fullPrice: fullPriceVal,
       depositPrice: (map['depositPrice'] as num?)?.toDouble() ?? 0.0,
@@ -127,6 +130,7 @@ class Accessory {
     String? name,
     String? imagePath,
     String? accessoryType,
+    String? shopName,
     bool? isDepositType,
     double? fullPrice,
     double? depositPrice,
@@ -140,6 +144,7 @@ class Accessory {
       name: name ?? this.name,
       imagePath: imagePath ?? this.imagePath,
       accessoryType: accessoryType ?? this.accessoryType,
+      shopName: shopName ?? this.shopName,
       isDepositType: isDepositType ?? this.isDepositType,
       fullPrice: fullPrice ?? this.fullPrice,
       depositPrice: depositPrice ?? this.depositPrice,

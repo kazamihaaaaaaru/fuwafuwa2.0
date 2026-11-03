@@ -337,6 +337,24 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   ),
                 ),
               ),
+              if (item.color != null && item.color!.trim().isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: FuwaColors.paleRose,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    item.color!,
+                    style: const TextStyle(
+                      color: FuwaColors.strawberryPink,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
               const Spacer(),
               // 总支出展示
               RichText(
@@ -677,6 +695,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           const SizedBox(height: 12),
           _buildSpecItem('体系', item.isLolita ? 'Lolita 洋装' : '地球人常服'),
           _buildSpecItem('品类', item.subCategory),
+          if (item.color != null && item.color!.isNotEmpty) _buildSpecItem('单品颜色', item.color!),
           if (item.size != null && item.size!.isNotEmpty) _buildSpecItem('尺码', item.size!),
           if (item.isEarth && item.season != null && item.season!.isNotEmpty)
             _buildSpecItem('适用季节', item.season!),

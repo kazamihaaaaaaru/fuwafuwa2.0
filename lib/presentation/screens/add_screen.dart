@@ -50,6 +50,7 @@ class _AddScreenState extends State<AddScreen> {
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _shopNameController = TextEditingController();
+  final TextEditingController _colorController = TextEditingController();
   final TextEditingController _customSizeController = TextEditingController();
   final TextEditingController _fullPriceController = TextEditingController();
   final TextEditingController _depositPriceController = TextEditingController();
@@ -82,6 +83,7 @@ class _AddScreenState extends State<AddScreen> {
       _subCategory = it.subCategory;
       _nameController.text = it.name;
       _shopNameController.text = it.shopName ?? '';
+      _colorController.text = it.color ?? '';
       _imagePath = it.imagePath;
 
       // 尺码
@@ -148,6 +150,7 @@ class _AddScreenState extends State<AddScreen> {
   void dispose() {
     _nameController.dispose();
     _shopNameController.dispose();
+    _colorController.dispose();
     _customSizeController.dispose();
     _fullPriceController.dispose();
     _depositPriceController.dispose();
@@ -404,6 +407,43 @@ class _AddScreenState extends State<AddScreen> {
             label: '购买店铺 / 品牌',
             hint: isLolita ? '如：玻璃花信 / Baby / AP' : '如：Snidel / Zara / 淘宝原创店',
             controller: _shopNameController,
+          ),
+          const SizedBox(height: 14),
+
+          const Text('颜色标签', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: ['生成色', '黑色', '绀色', '蓝色', '绿色', '紫色'].map((c) {
+              final isSel = _colorController.text == c;
+              return ChoiceChip(
+                label: Text(c),
+                selected: isSel,
+                onSelected: (selected) {
+                  setState(() {
+                    _colorController.text = selected ? c : '';
+                  });
+                },
+                selectedColor: FuwaColors.balletPink,
+                backgroundColor: FuwaColors.creamWhite,
+                labelStyle: TextStyle(
+                  color: isSel ? Colors.white : FuwaColors.chocolateDark,
+                  fontSize: 11,
+                  fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(color: isSel ? FuwaColors.balletPink : FuwaColors.subtleBorder),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 8),
+          _buildTextInput(
+            label: '手写或修改具体颜色',
+            hint: '如：生成色 / 绀色 / 薄荷绿 / 薰衣草紫 等',
+            controller: _colorController,
           ),
 
           const SizedBox(height: 14),
@@ -920,6 +960,7 @@ class _AddScreenState extends State<AddScreen> {
     final depositPrice = double.tryParse(_depositPriceController.text.trim()) ?? 0.0;
     final balancePrice = double.tryParse(_balancePriceController.text.trim()) ?? 0.0;
     final shopNameText = _shopNameController.text.trim();
+    final colorText = _colorController.text.trim();
 
     final sizeVal = _size == '其他'
         ? (_customSizeController.text.trim().isNotEmpty ? _customSizeController.text.trim() : '其他')
@@ -931,6 +972,7 @@ class _AddScreenState extends State<AddScreen> {
       subCategory: _subCategory,
       name: _nameController.text.trim(),
       imagePath: _imagePath,
+      color: colorText.isNotEmpty ? colorText : null,
       size: sizeVal,
       season: isLolita ? null : _season,
       shopName: shopNameText.isNotEmpty ? shopNameText : null,

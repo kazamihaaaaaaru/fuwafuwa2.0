@@ -1,3 +1,4 @@
+import 'wardrobe_statistics_screen.dart';
 import 'add_accessory_screen.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -172,22 +173,65 @@ class _LolitaScreenState extends State<LolitaScreen>
                       ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: FuwaColors.pureWhite,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: FuwaColors.softCardShadow,
-                      border: Border.all(color: FuwaColors.subtleBorder),
-                    ),
-                    child: Text(
-                      '$currentCount 件',
-                      style: const TextStyle(
-                        color: FuwaColors.chocolateDark,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          final isDress = _tabController.index == 0;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => WardrobeStatisticsScreen(
+                                category: isDress ? 'lolita' : 'accessory',
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: FuwaColors.pureWhite,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: FuwaColors.softCardShadow,
+                            border: Border.all(color: FuwaColors.subtleBorder),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.pie_chart_outline_rounded, size: 14, color: FuwaColors.balletPink),
+                              const SizedBox(width: 4),
+                              Text(
+                                _tabController.index == 0 ? '洋装统计 ୨୧' : '小物统计 ୨୧',
+                                style: const TextStyle(
+                                  color: FuwaColors.chocolateDark,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: FuwaColors.pureWhite,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: FuwaColors.softCardShadow,
+                          border: Border.all(color: FuwaColors.subtleBorder),
+                        ),
+                        child: Text(
+                          '$currentCount 件',
+                          style: const TextStyle(
+                            color: FuwaColors.chocolateDark,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -569,6 +613,18 @@ class _LolitaScreenState extends State<LolitaScreen>
                 fontWeight: FontWeight.w700,
               ),
             ),
+            if (acc.shopName != null && acc.shopName!.trim().isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                acc.shopName!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: FuwaColors.mutedRosyBrown,
+                  fontSize: 10,
+                ),
+              ),
+            ],
             const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -736,6 +792,10 @@ class _LolitaScreenState extends State<LolitaScreen>
                               fontWeight: FontWeight.w600,
                             ),
                           ),
+                          if (acc.shopName != null && acc.shopName!.trim().isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text('店铺品牌：${acc.shopName!}', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11)),
+                          ],
                           const SizedBox(height: 4),
                           Text('已搭配 ${boundItems.length} 条裙装', style: const TextStyle(color: FuwaColors.balletPink, fontSize: 11)),
                         ],

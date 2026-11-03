@@ -7,16 +7,20 @@ import '../../core/services/image_storage_service.dart';
 import '../../core/theme/fuwa_colors.dart';
 import '../../data/database/database_helper.dart';
 import '../../data/models/accessory.dart';
+import '../../data/models/item.dart';
+import '../../data/models/wishlist_item.dart';
 
 /// 全屏录入/修改搭配饰品页面 (`AddAccessoryScreen`)
 /// 统一规范全屏从容排版，去除突兀黑边，纯白微粉柔光卡片与深棕文字
 class AddAccessoryScreen extends StatefulWidget {
   final Accessory? accessoryToEdit; // 传入已有饰品则为修改编辑模式
+  final WishlistItem? prefilledWishlistItem; // 从心愿单转入的数据
   final VoidCallback? onAdded;
 
   const AddAccessoryScreen({
     super.key,
     this.accessoryToEdit,
+    this.prefilledWishlistItem,
     this.onAdded,
   });
 
@@ -30,6 +34,7 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
   final ImageStorageService _imageService = ImageStorageService.instance;
 
   final TextEditingController _nameCtrl = TextEditingController();
+  final TextEditingController _shopNameCtrl = TextEditingController();
   final TextEditingController _fullPriceCtrl = TextEditingController();
   final TextEditingController _depositPriceCtrl = TextEditingController();
   final TextEditingController _balancePriceCtrl = TextEditingController();
@@ -44,16 +49,41 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
   bool _isDepositType = false; // 智能默认项：饰品默认为现货全款
   bool _hasPaidBalance = false;
 
+  List<Item> _allDresses = [];
+  final Set<int> _selectedDressIds = {};
+
   @override
   void initState() {
     super.initState();
     _initDefaults();
+    _loadDresses();
+  }
+
+  Future<void> _loadDresses() async {
+    final dresses = await _dbHelper.getAllItems(category: 'lolita');
+    if (mounted) {
+      setState(() {
+        _allDresses = dresses;
+      });
+    }
   }
 
   void _initDefaults() {
+    if (widget.prefilledWishlistItem != null) {
+      final w = widget.prefilledWishlistItem!;
+      _nameCtrl.text = w.name;
+      _shopNameCtrl.text = w.shopName ?? '';
+      _fullPriceCtrl.text = w.budgetPrice > 0 ? w.budgetPrice.toStringAsFixed(0) : '';
+      _imagePath = w.imagePath;
+      if (w.subCategory != null && AppConstants.accessoryTypes.contains(w.subCategory)) {
+        _selectedType = w.subCategory!;
+      }
+    }
+
     if (widget.accessoryToEdit != null) {
       final acc = widget.accessoryToEdit!;
       _nameCtrl.text = acc.name;
+      _shopNameCtrl.text = acc.shopName ?? '';
       _selectedType = acc.accessoryType;
       _imagePath = acc.imagePath;
       _isDepositType = acc.isDepositType;
@@ -70,12 +100,25 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
         _fullPriceCtrl.text = acc.fullPrice > 0 ? acc.fullPrice.toStringAsFixed(0) : (acc.price > 0 ? acc.price.toStringAsFixed(0) : '');
         _date = acc.depositDate ?? DateFormat('yyyy-MM-dd').format(DateTime.now());
       }
+
+      if (acc.id != null) {
+        _dbHelper.getItemsForAccessory(acc.id!).then((dresses) {
+          if (mounted) {
+            setState(() {
+              for (final d in dresses) {
+                if (d.id != null) _selectedDressIds.add(d.id!);
+              }
+            });
+          }
+        });
+      }
     }
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _shopNameCtrl.dispose();
     _fullPriceCtrl.dispose();
     _depositPriceCtrl.dispose();
     _balancePriceCtrl.dispose();
@@ -127,6 +170,8 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
               _buildGeneralInfoCard(),
               const SizedBox(height: 16),
               _buildPricingCard(),
+              const SizedBox(height: 16),
+              _buildDressAssociationCard(),
             ],
           ),
         ),
@@ -241,6 +286,12 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
             hint: '如：琥珀心发带 / 珍珠手袖 / 优雅KC',
             controller: _nameCtrl,
             validator: (v) => (v == null || v.trim().isEmpty) ? '请输入小物名称' : null,
+          ),
+          const SizedBox(height: 14),
+          _buildTextInput(
+            label: '购买店铺 / 品牌',
+            hint: '如：Baby / AP / 凡尔赛花园 / 原创手作店',
+            controller: _shopNameCtrl,
           ),
           const SizedBox(height: 14),
           const Text('饰品类型', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w600)),
@@ -578,9 +629,11 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
     final depositPrice = double.tryParse(_depositPriceCtrl.text.trim()) ?? 0.0;
     final balancePrice = double.tryParse(_balancePriceCtrl.text.trim()) ?? 0.0;
 
+    final shopNameText = _shopNameCtrl.text.trim();
     final acc = Accessory(
       id: widget.accessoryToEdit?.id, // 保留原有 id
       name: _nameCtrl.text.trim(),
+      shopName: shopNameText.isNotEmpty ? shopNameText : null,
       imagePath: _imagePath,
       accessoryType: _selectedType,
       isDepositType: _isDepositType,
@@ -593,9 +646,9 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
     );
 
     if (widget.accessoryToEdit != null) {
-      await _dbHelper.updateAccessory(acc);
+      await _dbHelper.updateAccessory(acc, itemIds: _selectedDressIds.toList());
     } else {
-      await _dbHelper.insertAccessory(acc);
+      await _dbHelper.insertAccessory(acc, itemIds: _selectedDressIds.toList());
     }
 
     if (mounted) {
@@ -608,5 +661,93 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
         ),
       );
     }
+  }
+
+  Widget _buildDressAssociationCard() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: FuwaColors.pureWhite,
+        borderRadius: FuwaColors.roundedCardRadius,
+        boxShadow: FuwaColors.softCardShadow,
+        border: Border.all(color: FuwaColors.subtleBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: const [
+                  Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 12)),
+                  SizedBox(width: 6),
+                  Text('搭配绑定的洋装 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w700)),
+                ],
+              ),
+              Text(
+                '已选 ${_selectedDressIds.length} 条裙装',
+                style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text('勾选可将此饰品与对应洋装直接建立双向搭配关联', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11)),
+          const SizedBox(height: 12),
+          if (_allDresses.isEmpty)
+            const Text('衣柜里暂无洋装裙装，可在录入裙装后再行绑定 ୨୧', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 12))
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _allDresses.map((dress) {
+                final isSelected = dress.id != null && _selectedDressIds.contains(dress.id!);
+                return GestureDetector(
+                  onTap: () {
+                    if (dress.id == null) return;
+                    setState(() {
+                      if (isSelected) {
+                        _selectedDressIds.remove(dress.id!);
+                      } else {
+                        _selectedDressIds.add(dress.id!);
+                      }
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isSelected ? FuwaColors.apricotCream : FuwaColors.creamWhite,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected ? FuwaColors.balletPink : FuwaColors.subtleBorder,
+                        width: isSelected ? 1.5 : 1.0,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                          size: 14,
+                          color: isSelected ? FuwaColors.balletPink : FuwaColors.mutedRosyBrown,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          dress.name,
+                          style: TextStyle(
+                            color: FuwaColors.chocolateDark,
+                            fontSize: 12,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
   }
 }
