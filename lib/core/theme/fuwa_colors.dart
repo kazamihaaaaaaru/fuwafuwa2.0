@@ -16,6 +16,15 @@ class FuwaColors {
   // 主交互/高亮色：芭蕾舞鞋粉
   static const Color balletPink = Color(0xFFF299AC);
 
+  // 鲜活草莓粉色（颜色标签文字与高亮数字）
+  static const Color strawberryPink = Color(0xFFF28299);
+
+  // 柔和浅玫瑰微粉色（颜色胶囊与浅色背景）
+  static const Color paleRose = Color(0xFFFDEEF2);
+
+  // 清爽冰蓝（地球人专区与夏天冰蓝色）
+  static const Color iceBlue = Color(0xFF8EC5FC);
+
   // 点缀色：奶霜杏（未选中标签/辅助背景）
   static const Color apricotCream = Color(0xFFFCEEE3);
 
