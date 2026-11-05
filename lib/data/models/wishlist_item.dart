@@ -12,6 +12,7 @@ class WishlistItem {
   final String? subCategory;
   final String? note;
   final String? createdDate;
+  final int rankOrder;
 
   const WishlistItem({
     this.id,
@@ -25,6 +26,7 @@ class WishlistItem {
     this.subCategory,
     this.note,
     this.createdDate,
+    this.rankOrder = 0,
   });
 
   Map<String, dynamic> toMap() {
@@ -40,6 +42,7 @@ class WishlistItem {
       'subCategory': subCategory,
       'note': note,
       'createdDate': createdDate,
+      'rankOrder': rankOrder,
     };
   }
 
@@ -56,6 +59,7 @@ class WishlistItem {
       subCategory: map['subCategory'] as String?,
       note: map['note'] as String?,
       createdDate: map['createdDate'] as String?,
+      rankOrder: map['rankOrder'] as int? ?? 0,
     );
   }
 
@@ -71,6 +75,7 @@ class WishlistItem {
     String? subCategory,
     String? note,
     String? createdDate,
+    int? rankOrder,
   }) {
     return WishlistItem(
       id: id ?? this.id,
@@ -84,6 +89,7 @@ class WishlistItem {
       subCategory: subCategory ?? this.subCategory,
       note: note ?? this.note,
       createdDate: createdDate ?? this.createdDate,
+      rankOrder: rankOrder ?? this.rankOrder,
     );
   }
 

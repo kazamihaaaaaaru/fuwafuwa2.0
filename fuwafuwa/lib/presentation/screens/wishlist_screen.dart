@@ -9,12 +9,13 @@ import 'add_screen.dart';
 import 'add_wishlist_screen.dart';
 import 'add_accessory_screen.dart';
 
-/// Tab 3: 全新【心愿单】(`WishlistScreen`)
-/// 严格遵循甘系（Sweet Lolita）视觉设计规范：
-/// - 胶囊栏与前面页面严格统一尺寸（高 36px，无多余空隙留白）
-/// - 记录种草单品、预算、店家、预计贩售月份与心动等级
-/// - 支持【转入衣柜 ୨୧】预填无缝流转与自动归档
-/// - 支持【拔草】一键清爽删除
+/// Tab 3: 【少女心愿单】(`WishlistScreen`)
+/// 严格遵循甘系（Sweet Lolita）视觉设计规范与定制榜单模式：
+/// - 采用「心动心愿榜单模式」，支持用户长按/拖拽自由调节榜单排行顺序
+/// - 顶部保留【心动 X 件】计数徽章，主标题字号严格与衣柜各专区统一 (24px)
+/// - 榜单前三名赋予专属马卡龙金粉奖牌标识（#1 金平糖金、#2 芭蕾粉、#3 杏色）
+/// - 支持【转入洋装 / 常服衣柜】与【转入搭配小物箱】双向无缝归档
+/// - 支持【拔草】一键清爽移出
 class WishlistScreen extends StatefulWidget {
   final VoidCallback? onWardrobeUpdated;
 
@@ -58,7 +59,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // 1. 顶部标题栏
+            // 1. 顶部标题栏（字号、留白与各主页严格统一）
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Row(
@@ -108,7 +109,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
               ),
             ),
 
-            // 2. 心动等级胶囊筛选栏（高度统一为 36px，无多余白边空隙，和前序页面视觉严格统一）
+            // 2. 心动等级胶囊筛选栏（高度统一 36px）
             SizedBox(
               height: 36,
               child: ListView.separated(
@@ -173,15 +174,15 @@ class _WishlistScreenState extends State<WishlistScreen> {
               ),
             ),
 
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
 
-            // 3. 心愿卡片网格照片流
+            // 3. 榜单模式（用户可自由拖拽调节排行顺序）
             Expanded(
               child: RefreshIndicator(
                 color: FuwaColors.balletPink,
                 backgroundColor: FuwaColors.pureWhite,
                 onRefresh: _loadWishlist,
-                child: _buildWishlistGrid(),
+                child: _buildWishlistLeaderboard(),
               ),
             ),
           ],
@@ -191,7 +192,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
     );
   }
 
-  Widget _buildWishlistGrid() {
+  /// 榜单列表视图
+  Widget _buildWishlistLeaderboard() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator(color: FuwaColors.balletPink));
     }
@@ -201,143 +203,240 @@ class _WishlistScreenState extends State<WishlistScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 36)),
+            FuwaBreathingRibbon(
+              child: Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 36)),
+            ),
             SizedBox(height: 8),
-            Text('心愿单还是空的呢 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
+            Text('心愿榜单还是空的呢', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
             SizedBox(height: 4),
-            Text('点击右下角小缎带种草第一件心动小裙子', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 12)),
+            Text('点击右下角小缎带种草第一件心动单品', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 12)),
           ],
         ),
       );
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 96),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.62,
-        mainAxisSpacing: 14,
-        crossAxisSpacing: 14,
+    return Theme(
+      data: Theme.of(context).copyWith(canvasColor: Colors.transparent),
+      child: ReorderableListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 96),
+        itemCount: _wishlist.length,
+        onReorder: (oldIndex, newIndex) {
+          setState(() {
+            if (oldIndex < newIndex) {
+              newIndex -= 1;
+            }
+            final item = _wishlist.removeAt(oldIndex);
+            _wishlist.insert(newIndex, item);
+          });
+          _dbHelper.updateWishlistOrder(_wishlist);
+        },
+        itemBuilder: (context, index) {
+          final item = _wishlist[index];
+          return Container(
+            key: ValueKey(item.id ?? index),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: FuwaColors.pureWhite,
+              borderRadius: FuwaColors.roundedCardRadius,
+              boxShadow: FuwaColors.softCardShadow,
+              border: Border.all(color: FuwaColors.subtleBorder),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: FuwaColors.roundedCardRadius,
+              child: InkWell(
+                borderRadius: FuwaColors.roundedCardRadius,
+                onTap: () => _showWishlistDetailModal(item),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      // 1. 榜单排名徽章
+                      _buildRankBadge(index),
+                      const SizedBox(width: 10),
+
+                      // 2. 单品方形圆角相片
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          width: 66,
+                          height: 66,
+                          color: FuwaColors.creamWhite,
+                          child: item.imagePath != null && File(item.imagePath!).existsSync()
+                              ? Image.file(File(item.imagePath!), fit: BoxFit.cover)
+                              : const Center(
+                                  child: Text(
+                                    FuwaColors.ribbonSymbol,
+                                    style: TextStyle(color: FuwaColors.balletPink, fontSize: 22),
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
+                      // 3. 单品信息区
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: FuwaColors.chocolateDark,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: _getDesireBgColor(item.desireLevel),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    item.desireLevel,
+                                    style: TextStyle(
+                                      color: _getDesireTextColor(item.desireLevel),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                if (item.shopName != null && item.shopName!.trim().isNotEmpty) ...[
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      item.shopName!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Text(
+                                  item.budgetPrice > 0 ? '¥${AppConstants.formatPrice(item.budgetPrice)}' : '未定预算',
+                                  style: const TextStyle(
+                                    color: FuwaColors.chocolateDark,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                if (item.releaseDate != null && item.releaseDate!.trim().isNotEmpty) ...[
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '· 预计 ${item.releaseDate}',
+                                    style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 10),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // 4. 右侧拖拽重排手柄
+                      ReorderableDragStartListener(
+                        index: index,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          child: const Icon(
+                            Icons.drag_indicator_rounded,
+                            color: FuwaColors.mutedRosyBrown,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
-      itemCount: _wishlist.length,
-      itemBuilder: (context, index) {
-        final item = _wishlist[index];
-        return _buildWishlistCard(item);
-      },
     );
   }
 
-  Widget _buildWishlistCard(WishlistItem item) {
-    Color levelColor;
-    switch (item.desireLevel) {
-      case '非入不可 ♡':
-        levelColor = FuwaColors.balletPink;
-        break;
-      case '很心动 ୨୧':
-        levelColor = FuwaColors.sugarCandyGold;
-        break;
-      default:
-        levelColor = const Color(0xFFC798A6);
-        break;
-    }
-
-    return FuwaBounceCard(
-      onTap: () => _showWishlistDetailModal(item),
-      child: Container(
+  /// 榜单排名徽章渲染
+  Widget _buildRankBadge(int index) {
+    if (index == 0) {
+      return Container(
+        width: 28,
+        height: 28,
+        decoration: const BoxDecoration(
+          color: FuwaColors.sugarCandyGold,
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: const Text('1', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13)),
+      );
+    } else if (index == 1) {
+      return Container(
+        width: 28,
+        height: 28,
+        decoration: const BoxDecoration(
+          color: FuwaColors.balletPink,
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: const Text('2', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13)),
+      );
+    } else if (index == 2) {
+      return Container(
+        width: 28,
+        height: 28,
+        decoration: const BoxDecoration(
+          color: FuwaColors.seasonAutumn,
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: const Text('3', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13)),
+      );
+    } else {
+      return Container(
+        width: 28,
+        height: 28,
         decoration: BoxDecoration(
-          color: FuwaColors.pureWhite,
-          borderRadius: FuwaColors.roundedCardRadius,
-          boxShadow: FuwaColors.softCardShadow,
+          color: FuwaColors.creamWhite,
+          shape: BoxShape.circle,
           border: Border.all(color: FuwaColors.subtleBorder),
         ),
-        padding: const EdgeInsets.fromLTRB(10, 10, 10, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      color: FuwaColors.creamWhite,
-                      child: item.imagePath != null && File(item.imagePath!).existsSync()
-                          ? Image.file(File(item.imagePath!), fit: BoxFit.cover)
-                          : const Center(
-                              child: Text(
-                                FuwaColors.ribbonSymbol,
-                                style: TextStyle(color: FuwaColors.balletPink, fontSize: 30),
-                              ),
-                            ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 6,
-                    left: 6,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: levelColor.withOpacity(0.92),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        item.desireLevel,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              item.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: FuwaColors.chocolateDark,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Row(
-              children: [
-                if (item.shopName != null && item.shopName!.isNotEmpty) ...[
-                  Expanded(
-                    child: Text(
-                      item.shopName!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11),
-                    ),
-                  ),
-                ],
-                if (item.releaseDate != null && item.releaseDate!.isNotEmpty)
-                  Text(
-                    '${item.releaseDate} 出',
-                    style: const TextStyle(color: FuwaColors.sugarCandyGold, fontSize: 10, fontWeight: FontWeight.w600),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              item.budgetPrice > 0 ? '预算 ¥${AppConstants.formatPrice(item.budgetPrice)}' : '未定预算',
-              style: const TextStyle(
-                color: FuwaColors.chocolateDark,
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+        alignment: Alignment.center,
+        child: Text('${index + 1}', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontWeight: FontWeight.w700, fontSize: 11)),
+      );
+    }
+  }
+
+  Color _getDesireBgColor(String level) {
+    switch (level) {
+      case '非入不可 ♡':
+        return FuwaColors.paleRose;
+      case '很心动 ୨୧':
+        return FuwaColors.apricotCream;
+      default:
+        return FuwaColors.creamWhite;
+    }
+  }
+
+  Color _getDesireTextColor(String level) {
+    switch (level) {
+      case '非入不可 ♡':
+        return FuwaColors.strawberryPink;
+      case '很心动 ୨୧':
+        return FuwaColors.chocolateDark;
+      default:
+        return FuwaColors.mutedRosyBrown;
+    }
   }
 
   Future<void> _showWishlistDetailModal(WishlistItem item) async {
@@ -363,12 +462,12 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: FuwaColors.apricotCream,
+                        color: _getDesireBgColor(item.desireLevel),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         item.desireLevel,
-                        style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 11, fontWeight: FontWeight.w700),
+                        style: TextStyle(color: _getDesireTextColor(item.desireLevel), fontSize: 11, fontWeight: FontWeight.w700),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -492,14 +591,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(FuwaColors.ribbonSymbol, style: TextStyle(color: Colors.white, fontSize: 12)),
-                        SizedBox(width: 6),
-                        Text('转入衣柜 ୨୧', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
-                      ],
-                    ),
+                    child: const Text('转入衣柜 / 小物箱', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
                   ),
                 ),
               ],
@@ -511,7 +603,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 
   Future<void> _transferToWardrobe(WishlistItem item) async {
-    // 弹出双选弹窗：转入洋装/常服衣柜 还是 转入搭配小物箱
     final choice = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -528,9 +619,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
             children: [
               Row(
                 children: const [
-                  Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 14)),
+                  Icon(Icons.checkroom_rounded, color: FuwaColors.balletPink, size: 20),
                   SizedBox(width: 8),
-                  Text('请选择转入目标 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w800)),
+                  Text('请选择转入目标', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w800)),
                 ],
               ),
               const SizedBox(height: 8),
@@ -545,7 +636,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   decoration: BoxDecoration(color: FuwaColors.pureWhite, shape: BoxShape.circle, boxShadow: FuwaColors.softCardShadow),
                   child: const Icon(Icons.checkroom_rounded, color: FuwaColors.balletPink, size: 20),
                 ),
-                title: const Text('转入洋装 / 常服衣柜 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w700)),
+                title: const Text('转入洋装 / 常服衣柜', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w700)),
                 subtitle: const Text('归入洋装裙装或日常常服档案', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11)),
                 trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: FuwaColors.mutedRosyBrown),
                 onTap: () => Navigator.pop(ctx, 'wardrobe'),
@@ -560,7 +651,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   decoration: BoxDecoration(color: FuwaColors.pureWhite, shape: BoxShape.circle, boxShadow: FuwaColors.softCardShadow),
                   child: const Icon(Icons.auto_awesome_rounded, color: FuwaColors.balletPink, size: 20),
                 ),
-                title: const Text('转入搭配小物箱 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w700)),
+                title: const Text('转入搭配小物箱', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w700)),
                 subtitle: const Text('归入KC、发带、帽子、手袖等饰品库', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11)),
                 trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: FuwaColors.mutedRosyBrown),
                 onTap: () => Navigator.pop(ctx, 'accessory'),
@@ -603,7 +694,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
         builder: (ctx) => AlertDialog(
           backgroundColor: FuwaColors.pureWhite,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('已成功收纳 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w700)),
+          title: const Text('已成功收纳', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w700)),
           content: Text('已为您建立档案，是否自动从心愿单移出「${item.name}」？', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 13)),
           actions: [
             TextButton(
@@ -636,20 +727,20 @@ class _WishlistScreenState extends State<WishlistScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: FuwaColors.pureWhite,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('确认拔草此单品？', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w700)),
-        content: Text('确定要将「${item.name}」从心愿单拔草移除吗？', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 13)),
+        title: const Text('确认拔草？', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w700)),
+        content: Text('确认要从少女心愿单中移除「${item.name}」吗？', style: const TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 13)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('再想想', style: TextStyle(color: FuwaColors.mutedRosyBrown))),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消', style: TextStyle(color: FuwaColors.mutedRosyBrown))),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: FuwaColors.balletPink, elevation: 0),
-            child: const Text('确定拔草', style: TextStyle(color: Colors.white)),
+            child: const Text('确认拔草', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && item.id != null) {
       await _dbHelper.deleteWishlistItem(item.id!);
       _loadWishlist();
     }
@@ -657,20 +748,37 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
   Widget _buildFab() {
     return FuwaBreathingRibbon(
-      child: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              fullscreenDialog: true,
-              builder: (_) => AddWishlistScreen(onAdded: _loadWishlist),
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: FuwaColors.balletPink.withOpacity(0.45),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
-          );
-        },
-        backgroundColor: FuwaColors.balletPink,
-        elevation: 0,
-        shape: const CircleBorder(),
-        child: const Text(FuwaColors.ribbonSymbol, style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () async {
+            final added = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                fullscreenDialog: true,
+                builder: (_) => const AddWishlistScreen(),
+              ),
+            );
+            if (added == true) _loadWishlist();
+          },
+          backgroundColor: FuwaColors.balletPink,
+          elevation: 0,
+          highlightElevation: 0,
+          shape: const CircleBorder(),
+          child: const Text(
+            FuwaColors.ribbonSymbol,
+            style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ),
       ),
     );
   }

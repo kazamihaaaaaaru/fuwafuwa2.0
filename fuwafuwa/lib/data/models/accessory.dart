@@ -6,6 +6,7 @@ class Accessory {
   final String? imagePath;
   final String accessoryType;
   final String? shopName; // 店铺/品牌名称
+  final String? color; // 饰品颜色
   final bool isDepositType; // false: 全款现货, true: 定金尾款制
   final double fullPrice; // 全款金额
   final double depositPrice; // 定金金额
@@ -20,6 +21,7 @@ class Accessory {
     this.imagePath,
     required this.accessoryType,
     this.shopName,
+    this.color,
     this.isDepositType = false,
     this.fullPrice = 0.0,
     this.depositPrice = 0.0,
@@ -92,6 +94,7 @@ class Accessory {
       'imagePath': imagePath,
       'accessoryType': accessoryType,
       'shopName': shopName,
+      'color': color,
       'isDepositType': isDepositType ? 1 : 0,
       'fullPrice': fullPrice,
       'depositPrice': depositPrice,
@@ -115,6 +118,7 @@ class Accessory {
       imagePath: map['imagePath'] as String?,
       accessoryType: map['accessoryType'] as String? ?? '其他',
       shopName: map['shopName'] as String?,
+      color: map['color'] as String?,
       isDepositType: isDeposit,
       fullPrice: fullPriceVal,
       depositPrice: (map['depositPrice'] as num?)?.toDouble() ?? 0.0,
@@ -131,6 +135,7 @@ class Accessory {
     String? imagePath,
     String? accessoryType,
     String? shopName,
+    String? color,
     bool? isDepositType,
     double? fullPrice,
     double? depositPrice,
@@ -145,6 +150,7 @@ class Accessory {
       imagePath: imagePath ?? this.imagePath,
       accessoryType: accessoryType ?? this.accessoryType,
       shopName: shopName ?? this.shopName,
+      color: color ?? this.color,
       isDepositType: isDepositType ?? this.isDepositType,
       fullPrice: fullPrice ?? this.fullPrice,
       depositPrice: depositPrice ?? this.depositPrice,

@@ -36,6 +36,7 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
 
   final TextEditingController _nameCtrl = TextEditingController();
   final TextEditingController _shopNameCtrl = TextEditingController();
+  final TextEditingController _colorCtrl = TextEditingController();
   final TextEditingController _fullPriceCtrl = TextEditingController();
   final TextEditingController _depositPriceCtrl = TextEditingController();
   final TextEditingController _balancePriceCtrl = TextEditingController();
@@ -85,6 +86,7 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
       final acc = widget.accessoryToEdit!;
       _nameCtrl.text = acc.name;
       _shopNameCtrl.text = acc.shopName ?? '';
+      _colorCtrl.text = acc.color ?? '';
       _selectedType = acc.accessoryType;
       _imagePath = acc.imagePath;
       _isDepositType = acc.isDepositType;
@@ -120,6 +122,7 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
   void dispose() {
     _nameCtrl.dispose();
     _shopNameCtrl.dispose();
+    _colorCtrl.dispose();
     _fullPriceCtrl.dispose();
     _depositPriceCtrl.dispose();
     _balancePriceCtrl.dispose();
@@ -293,6 +296,42 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
             label: '购买店铺 / 品牌',
             hint: '如：Baby / AP / 凡尔赛花园 / 原创手作店',
             controller: _shopNameCtrl,
+          ),
+          const SizedBox(height: 14),
+          const Text('饰品颜色', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: ['生成色', '黑色', '绀色', '蓝色', '绿色', '紫色'].map((c) {
+              final isSel = _colorCtrl.text == c;
+              return ChoiceChip(
+                label: Text(c),
+                selected: isSel,
+                onSelected: (selected) {
+                  setState(() {
+                    _colorCtrl.text = selected ? c : '';
+                  });
+                },
+                selectedColor: FuwaColors.balletPink,
+                backgroundColor: FuwaColors.creamWhite,
+                labelStyle: TextStyle(
+                  color: isSel ? Colors.white : FuwaColors.chocolateDark,
+                  fontSize: 11,
+                  fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(color: isSel ? FuwaColors.balletPink : FuwaColors.subtleBorder),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 8),
+          _buildTextInput(
+            label: '手写或修改具体颜色',
+            hint: '如：生成色 / 金色 / 银色 / 纯白 等',
+            controller: _colorCtrl,
           ),
           const SizedBox(height: 14),
           const Text('饰品类型', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 12, fontWeight: FontWeight.w600)),
@@ -634,10 +673,12 @@ class _AddAccessoryScreenState extends State<AddAccessoryScreen> {
     final balancePrice = double.tryParse(_balancePriceCtrl.text.trim()) ?? 0.0;
 
     final shopNameText = _shopNameCtrl.text.trim();
+    final colorText = _colorCtrl.text.trim();
     final acc = Accessory(
       id: widget.accessoryToEdit?.id, // 保留原有 id
       name: _nameCtrl.text.trim(),
       shopName: shopNameText.isNotEmpty ? shopNameText : null,
+      color: colorText.isNotEmpty ? colorText : null,
       imagePath: _imagePath,
       accessoryType: _selectedType,
       isDepositType: _isDepositType,

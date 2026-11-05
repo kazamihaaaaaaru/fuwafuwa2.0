@@ -10,7 +10,7 @@ import '../models/wishlist_item.dart';
 /// 版本 v4：支持尾款/全款最后付款日期降序排列（待补款置顶）、颜色标签、饰品品牌、完整备份导出与导入
 class DatabaseHelper {
   static const String _dbName = 'fuwafuwa.db';
-  static const int _dbVersion = 4; // 升级至 v4
+  static const int _dbVersion = 5; // 升级至 v4
 
   static const String tableItems = 'items';
   static const String tableAccessories = 'accessories';
@@ -74,6 +74,8 @@ class DatabaseHelper {
         imagePath TEXT,
         accessoryType TEXT NOT NULL,
         shopName TEXT,
+        shopName TEXT,
+        color TEXT,
         price REAL DEFAULT 0.0,
         purchaseDate TEXT,
         isDepositType INTEGER NOT NULL DEFAULT 0,
@@ -108,7 +110,8 @@ class DatabaseHelper {
         category TEXT NOT NULL DEFAULT 'lolita',
         subCategory TEXT,
         note TEXT,
-        createdDate TEXT
+        createdDate TEXT,
+        rankOrder INTEGER DEFAULT 0
       );
     ''');
 
@@ -167,6 +170,16 @@ class DatabaseHelper {
       } catch (_) {}
       try {
         await db.execute('ALTER TABLE $tableAccessories ADD COLUMN shopName TEXT;');
+      } catch (_) {}
+    }
+
+    if (oldVersion < 5) {
+      // v5 升级：饰品增加颜色字段（color），心愿单增加排序序号（rankOrder）
+      try {
+        await db.execute('ALTER TABLE $tableAccessories ADD COLUMN color TEXT;');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE $tableWishlist ADD COLUMN rankOrder INTEGER DEFAULT 0;');
       } catch (_) {}
     }
   }
@@ -392,7 +405,8 @@ class DatabaseHelper {
       whereArgs.add(accessoryType);
     }
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
-      whereClauses.add('(name LIKE ? OR shopName LIKE ?)');
+      whereClauses.add('(name LIKE ? OR shopName LIKE ? OR color LIKE ?)');
+      whereArgs.add('%${searchQuery.trim()}%');
       whereArgs.add('%${searchQuery.trim()}%');
       whereArgs.add('%${searchQuery.trim()}%');
     }
@@ -501,7 +515,8 @@ class DatabaseHelper {
       whereArgs.add(category);
     }
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
-      whereClauses.add('(name LIKE ? OR shopName LIKE ?)');
+      whereClauses.add('(name LIKE ? OR shopName LIKE ? OR color LIKE ?)');
+      whereArgs.add('%${searchQuery.trim()}%');
       whereArgs.add('%${searchQuery.trim()}%');
       whereArgs.add('%${searchQuery.trim()}%');
     }
@@ -511,7 +526,7 @@ class DatabaseHelper {
       tableWishlist,
       where: where,
       whereArgs: whereArgs.isEmpty ? null : whereArgs,
-      orderBy: 'id DESC',
+      orderBy: 'rankOrder ASC, id DESC',
     );
 
     return maps.map((m) => WishlistItem.fromMap(m)).toList();
@@ -535,6 +550,24 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  /// 更新心愿单自定义拖拽排序权重
+  Future<void> updateWishlistOrder(List<WishlistItem> reorderedList) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      for (int i = 0; i < reorderedList.length; i++) {
+        final item = reorderedList[i];
+        if (item.id != null) {
+          await txn.update(
+            tableWishlist,
+            {'rankOrder': i + 1},
+            where: 'id = ?',
+            whereArgs: [item.id],
+          );
+        }
+      }
+    });
   }
 
   // ==========================================

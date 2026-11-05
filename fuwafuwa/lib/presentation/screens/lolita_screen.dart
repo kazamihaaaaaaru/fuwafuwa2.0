@@ -146,7 +146,7 @@ class _LolitaScreenState extends State<LolitaScreen>
           children: [
             // 1. 顶部艺术标题区与永恒经典名句
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -173,65 +173,42 @@ class _LolitaScreenState extends State<LolitaScreen>
                       ),
                     ],
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          final isDress = _tabController.index == 0;
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => WardrobeStatisticsScreen(
-                                category: isDress ? 'lolita' : 'accessory',
-                              ),
+                  GestureDetector(
+                    onTap: () {
+                      final isDress = _tabController.index == 0;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => WardrobeStatisticsScreen(
+                            category: isDress ? 'lolita' : 'accessory',
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: FuwaColors.pureWhite,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: FuwaColors.softCardShadow,
+                        border: Border.all(color: FuwaColors.subtleBorder),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.pie_chart_outline_rounded, size: 14, color: FuwaColors.balletPink),
+                          const SizedBox(width: 4),
+                          Text(
+                            _tabController.index == 0 ? '洋装统计' : '小物统计',
+                            style: const TextStyle(
+                              color: FuwaColors.chocolateDark,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
                             ),
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: FuwaColors.pureWhite,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: FuwaColors.softCardShadow,
-                            border: Border.all(color: FuwaColors.subtleBorder),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.pie_chart_outline_rounded, size: 14, color: FuwaColors.balletPink),
-                              const SizedBox(width: 4),
-                              Text(
-                                _tabController.index == 0 ? '洋装统计 ୨୧' : '小物统计 ୨୧',
-                                style: const TextStyle(
-                                  color: FuwaColors.chocolateDark,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: FuwaColors.pureWhite,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: FuwaColors.softCardShadow,
-                          border: Border.all(color: FuwaColors.subtleBorder),
-                        ),
-                        child: Text(
-                          '$currentCount 件',
-                          style: const TextStyle(
-                            color: FuwaColors.chocolateDark,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -249,8 +226,8 @@ class _LolitaScreenState extends State<LolitaScreen>
                 ),
                 child: Row(
                   children: [
-                    _buildWideBookmarkTab(0, '洋装裙装 ୨୧'),
-                    _buildWideBookmarkTab(1, '搭配小物 ୨୧'),
+                    _buildWideBookmarkTab(0, '洋装裙装'),
+                    _buildWideBookmarkTab(1, '搭配小物'),
                   ],
                 ),
               ),
@@ -381,7 +358,7 @@ class _LolitaScreenState extends State<LolitaScreen>
                   children: [
                     Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 36)),
                     SizedBox(height: 8),
-                    Text('还没有收藏 Lolita 洋装 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
+                    Text('还没有收藏洋装', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
                     SizedBox(height: 4),
                     Text('点击右下角小缎带开始录入', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 12)),
                   ],
@@ -500,7 +477,7 @@ class _LolitaScreenState extends State<LolitaScreen>
                   children: [
                     Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 36)),
                     SizedBox(height: 8),
-                    Text('小物箱里还没有饰品 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
+                    Text('小物箱里还没有饰品', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
                     SizedBox(height: 4),
                     Text('KC、发带、BNT、手袖等待收纳', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 12)),
                   ],
@@ -573,13 +550,29 @@ class _LolitaScreenState extends State<LolitaScreen>
                         color: FuwaColors.pureWhite.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(
-                        acc.accessoryType,
-                        style: const TextStyle(
-                          color: FuwaColors.chocolateDark,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            acc.accessoryType,
+                            style: const TextStyle(
+                              color: FuwaColors.chocolateDark,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if (acc.color != null && acc.color!.trim().isNotEmpty) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              '· ${acc.color!}',
+                              style: const TextStyle(
+                                color: FuwaColors.strawberryPink,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ),

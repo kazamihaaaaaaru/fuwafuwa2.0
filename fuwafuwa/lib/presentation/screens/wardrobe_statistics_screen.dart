@@ -70,7 +70,7 @@ class _WardrobeStatisticsScreenState extends State<WardrobeStatisticsScreen> {
       _dimensionOptions = ['类型', '年份', '颜色', '状态', '店铺/品牌'];
     } else {
       // 小物：类型、年份、状态、店铺/品牌（无颜色）
-      _dimensionOptions = ['类型', '年份', '状态', '店铺/品牌'];
+      _dimensionOptions = ['类型', '年份', '颜色', '状态', '店铺/品牌'];
     }
     _selectedDimension = _dimensionOptions.first;
   }
@@ -100,12 +100,12 @@ class _WardrobeStatisticsScreenState extends State<WardrobeStatisticsScreen> {
   String get _pageTitle {
     switch (widget.category) {
       case 'lolita':
-        return '洋装衣橱统计 ୨୧';
+        return '洋装衣橱统计';
       case 'accessory':
-        return '小物收藏统计 ୨୧';
+        return '小物收藏统计';
       case 'earth':
       default:
-        return '常服衣橱统计 ୨୧';
+        return '常服衣橱统计';
     }
   }
 
@@ -142,6 +142,8 @@ class _WardrobeStatisticsScreenState extends State<WardrobeStatisticsScreen> {
         final d = acc.depositDate ?? acc.balanceDate;
         if (d != null && d.length >= 4) return '${d.substring(0, 4)}年';
         return '未记录年份';
+      case '颜色':
+        return (acc.color != null && acc.color!.trim().isNotEmpty) ? acc.color!.trim() : '未标颜色';
       case '状态':
         return acc.isDepositType
             ? (acc.isPendingBalance ? '待补尾款' : '已补款出货')
@@ -323,7 +325,7 @@ class _WardrobeStatisticsScreenState extends State<WardrobeStatisticsScreen> {
             children: [
               Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 32)),
               SizedBox(height: 8),
-              Text('衣橱里暂无该分类的单品 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
+              Text('衣橱里暂无该分类的单品', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
             ],
           ),
         ),
@@ -351,7 +353,7 @@ class _WardrobeStatisticsScreenState extends State<WardrobeStatisticsScreen> {
                   const Icon(Icons.pie_chart_rounded, size: 16, color: FuwaColors.balletPink),
                   const SizedBox(width: 6),
                   Text(
-                    '$_selectedDimension分布大盘 ୨୧',
+                    '$_selectedDimension分布大盘',
                     style: const TextStyle(
                       color: FuwaColors.chocolateDark,
                       fontSize: 15,
@@ -519,8 +521,8 @@ class _WardrobeStatisticsScreenState extends State<WardrobeStatisticsScreen> {
             const SizedBox(width: 6),
             Text(
               _selectedFilterValue != null
-                  ? '【$_selectedFilterValue】归档收纳 ୨୧'
-                  : '全部归档单品 ୨୧',
+                  ? '【$_selectedFilterValue】归档收纳'
+                  : '全部归档单品',
               style: const TextStyle(
                 color: FuwaColors.chocolateDark,
                 fontSize: 15,
@@ -559,7 +561,7 @@ class _WardrobeStatisticsScreenState extends State<WardrobeStatisticsScreen> {
       if (list.isEmpty) {
         return const SliverFillRemaining(
           child: Center(
-            child: Text('当前分类下暂无饰品 ୨୧', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 13)),
+            child: Text('当前分类下暂无饰品', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 13)),
           ),
         );
       }
@@ -587,7 +589,7 @@ class _WardrobeStatisticsScreenState extends State<WardrobeStatisticsScreen> {
       if (list.isEmpty) {
         return const SliverFillRemaining(
           child: Center(
-            child: Text('当前分类下暂无衣物 ୨୧', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 13)),
+            child: Text('当前分类下暂无衣物', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 13)),
           ),
         );
       }

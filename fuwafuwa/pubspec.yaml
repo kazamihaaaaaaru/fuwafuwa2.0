@@ -21,6 +21,9 @@ dependencies:
   # 日期格式化与通用工具
   intl: ^0.19.0
 
+  # 纯 Dart 本地 ZIP 压缩归档（真·数据与高清图片完整备份迁移）
+  archive: ^3.6.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

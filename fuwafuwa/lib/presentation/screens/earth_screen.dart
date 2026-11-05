@@ -121,60 +121,37 @@ class _EarthScreenState extends State<EarthScreen> {
                               ),
                             ],
                           ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const WardrobeStatisticsScreen(category: 'earth'),
-                                  ),
-                                ),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                  decoration: BoxDecoration(
-                                    color: FuwaColors.pureWhite,
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: FuwaColors.softCardShadow,
-                                    border: Border.all(color: FuwaColors.subtleBorder),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: const [
-                                      Icon(Icons.pie_chart_outline_rounded, size: 14, color: FuwaColors.balletPink),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        '常服统计 ୨୧',
-                                        style: TextStyle(
-                                          color: FuwaColors.chocolateDark,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                          GestureDetector(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const WardrobeStatisticsScreen(category: 'earth'),
                               ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: FuwaColors.pureWhite,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: FuwaColors.softCardShadow,
-                                  border: Border.all(color: FuwaColors.subtleBorder),
-                                ),
-                                child: Text(
-                                  '${_items.length} 件',
-                                  style: const TextStyle(
-                                    color: FuwaColors.chocolateDark,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: FuwaColors.pureWhite,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: FuwaColors.softCardShadow,
+                                border: Border.all(color: FuwaColors.subtleBorder),
                               ),
-                            ],
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(Icons.pie_chart_outline_rounded, size: 14, color: FuwaColors.balletPink),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    '常服统计',
+                                    style: TextStyle(
+                                      color: FuwaColors.chocolateDark,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -271,9 +248,9 @@ class _EarthScreenState extends State<EarthScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: const [
-            Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 36)),
+            FuwaBreathingRibbon(child: Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 36))),
             SizedBox(height: 8),
-            Text('该分类下暂无常服单品 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
+            Text('该分类下暂无常服单品', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
             SizedBox(height: 4),
             Text('点击右下角小缎带开始录入', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 12)),
           ],
@@ -316,14 +293,31 @@ class _EarthScreenState extends State<EarthScreen> {
 
   Widget _buildFab() {
     return FuwaBreathingRibbon(
-      child: FloatingActionButton(
-        onPressed: widget.onAddTap,
-        backgroundColor: FuwaColors.balletPink,
-        elevation: 0,
-        shape: const CircleBorder(),
-        child: const Text(
-          FuwaColors.ribbonSymbol,
-          style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: FuwaColors.balletPink.withOpacity(0.45),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: widget.onAddTap,
+          backgroundColor: FuwaColors.balletPink,
+          elevation: 0,
+          highlightElevation: 0,
+          shape: const CircleBorder(),
+          child: const Text(
+            FuwaColors.ribbonSymbol,
+            style: TextStyle(
+              fontSize: 24,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ),
     );

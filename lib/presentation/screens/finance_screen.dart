@@ -251,8 +251,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
                                 const SizedBox(width: 6),
                                 Text(
                                   _selectedYear == '全部年份'
-                                      ? '历年支出流水明细 ୨୧'
-                                      : '$_selectedYear年${_selectedMonth != '全部月份' ? _selectedMonth : ''}支出流水 ୨୧',
+                                      ? '历年支出流水明细'
+                                      : '$_selectedYear年${_selectedMonth != '全部月份' ? _selectedMonth : ''}支出流水',
                                   style: const TextStyle(
                                     color: FuwaColors.chocolateDark,
                                     fontSize: 15,
@@ -300,7 +300,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
               '记账看板 ୨୧',
               style: TextStyle(
                 color: FuwaColors.chocolateDark,
-                fontSize: 26,
+                fontSize: 24,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.5,
               ),
@@ -507,7 +507,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: const [
-              Text('支出分类大盘 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w700)),
+              Text('支出分类大盘', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w700)),
               Text('洋装 · 常服 · 小物', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11)),
             ],
           ),
@@ -565,7 +565,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: const [
-              Text('历年支出总结对比 ୨୧', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w800)),
+              Text('历年支出总结对比', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w800)),
               Text('点击切换具体年份', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 11)),
             ],
           ),
@@ -653,7 +653,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '$_selectedYear 年度总结看板 ୨୧',
+                '$_selectedYear 年度总结看板',
                 style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w800),
               ),
               Container(
@@ -717,7 +717,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('$_selectedYear年各月支出条形图 ୨୧', style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w800)),
+              Text('$_selectedYear年各月支出条形图', style: const TextStyle(color: FuwaColors.chocolateDark, fontSize: 14, fontWeight: FontWeight.w800)),
               Text(_selectedMonth == '全部月份' ? '点击月份联动筛选' : '已筛选 $_selectedMonth', style: const TextStyle(color: FuwaColors.strawberryPink, fontSize: 11, fontWeight: FontWeight.w600)),
             ],
           ),
@@ -839,7 +839,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 40),
           child: Center(
-            child: Text('当前筛选下暂无支出记录 ୨୧', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 13)),
+            child: Text('当前筛选下暂无支出记录', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 13)),
           ),
         ),
       );
