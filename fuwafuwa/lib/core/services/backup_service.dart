@@ -107,10 +107,18 @@ class BackupService {
     }
 
     for (final file in archive.files) {
-      if (file.name.startsWith('images/') && !file.isDirectory) {
+      if (file.name.startsWith('images/') && !file.name.endsWith('/')) {
         final basename = p.basename(file.name);
-        final imgFile = File(p.join(imagesDir.path, basename));
-        await imgFile.writeAsBytes(file.content as List<int>);
+        if (basename.isNotEmpty) {
+          final imgFile = File(p.join(imagesDir.path, basename));
+          final dynamic content = file.content;
+          final List<int> fileBytes = content is List<int>
+              ? content
+              : (content != null ? List<int>.from(content as dynamic) : <int>[]);
+          if (fileBytes.isNotEmpty) {
+            await imgFile.writeAsBytes(fileBytes);
+          }
+        }
       }
     }
 
