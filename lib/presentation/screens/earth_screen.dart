@@ -245,15 +245,23 @@ class _EarthScreenState extends State<EarthScreen> {
 
     if (_items.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            FuwaBreathingRibbon(child: Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 36))),
-            SizedBox(height: 8),
-            Text('该分类下暂无常服单品', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
-            SizedBox(height: 4),
-            Text('点击右下角小缎带开始录入', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 12)),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 60),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              FuwaBreathingRibbon(
+                child: Text(
+                  FuwaColors.ribbonSymbol,
+                  style: TextStyle(color: FuwaColors.balletPink, fontSize: 48, fontWeight: FontWeight.bold),
+                ),
+              ),
+              SizedBox(height: 14),
+              Text('还没有录入常服', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w700)),
+              SizedBox(height: 6),
+              Text('点击右下角呼吸小缎带开始录入', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 12, fontWeight: FontWeight.w500)),
+            ],
+          ),
         ),
       );
     }

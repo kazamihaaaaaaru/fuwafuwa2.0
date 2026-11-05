@@ -287,6 +287,17 @@ class _BackupDialogState extends State<BackupDialog> with SingleTickerProviderSt
               ),
             ),
           ),
+          const SizedBox(height: 14),
+          Center(
+            child: Text(
+              '「ふわふわ」衣柜管理 · v1.1.0 (Build 2)',
+              style: TextStyle(
+                color: FuwaColors.mutedRosyBrown.withOpacity(0.7),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
 
           if (_exportedZipPath != null) ...[
             const SizedBox(height: 16),
@@ -477,6 +488,17 @@ class _BackupDialogState extends State<BackupDialog> with SingleTickerProviderSt
                 backgroundColor: FuwaColors.balletPink,
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Center(
+            child: Text(
+              '「ふわふわ」衣柜管理 · v1.1.0 (Build 2)',
+              style: TextStyle(
+                color: FuwaColors.mutedRosyBrown.withOpacity(0.7),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),

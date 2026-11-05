@@ -74,7 +74,6 @@ class DatabaseHelper {
         imagePath TEXT,
         accessoryType TEXT NOT NULL,
         shopName TEXT,
-        shopName TEXT,
         color TEXT,
         price REAL DEFAULT 0.0,
         purchaseDate TEXT,

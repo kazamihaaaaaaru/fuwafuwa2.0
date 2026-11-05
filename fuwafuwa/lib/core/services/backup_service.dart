@@ -55,24 +55,20 @@ class BackupService {
     final timeTag = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
     final fileName = 'fuwafuwa_wardrobe_backup_$timeTag.zip';
 
-    // 优先保存至手机公开的 Download 目录，方便在文件管理器中找到并发送
-    String savedPath;
+    // 优先保存至应用内部沙盒（100% 成功无权限报错）
+    final localFile = File(p.join(appDir.path, fileName));
+    await localFile.writeAsBytes(zipBytes);
+    String savedPath = localFile.path;
+
+    // 尝试同步复制到手机 Download 文件夹（若系统权限限制则安全降级）
     try {
       final downloadDir = Directory('/storage/emulated/0/Download');
       if (downloadDir.existsSync()) {
         final targetFile = File(p.join(downloadDir.path, fileName));
         await targetFile.writeAsBytes(zipBytes);
         savedPath = targetFile.path;
-      } else {
-        final targetFile = File(p.join(appDir.path, fileName));
-        await targetFile.writeAsBytes(zipBytes);
-        savedPath = targetFile.path;
       }
-    } catch (_) {
-      final targetFile = File(p.join(appDir.path, fileName));
-      await targetFile.writeAsBytes(zipBytes);
-      savedPath = targetFile.path;
-    }
+    } catch (_) {}
 
     return savedPath;
   }

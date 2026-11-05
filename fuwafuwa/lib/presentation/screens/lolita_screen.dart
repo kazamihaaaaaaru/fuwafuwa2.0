@@ -351,17 +351,26 @@ class _LolitaScreenState extends State<LolitaScreen>
               child: Center(child: CircularProgressIndicator(color: FuwaColors.balletPink)),
             )
           else if (_dresses.isEmpty)
-            const SliverFillRemaining(
+            SliverFillRemaining(
+              hasScrollBody: false,
               child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 36)),
-                    SizedBox(height: 8),
-                    Text('还没有收藏洋装', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
-                    SizedBox(height: 4),
-                    Text('点击右下角小缎带开始录入', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 12)),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 60),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      FuwaBreathingRibbon(
+                        child: Text(
+                          FuwaColors.ribbonSymbol,
+                          style: TextStyle(color: FuwaColors.balletPink, fontSize: 48, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      SizedBox(height: 14),
+                      Text('还没有录入洋装', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w700)),
+                      SizedBox(height: 6),
+                      Text('点击右下角呼吸小缎带开始录入', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 12, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
                 ),
               ),
             )
@@ -470,17 +479,26 @@ class _LolitaScreenState extends State<LolitaScreen>
               child: Center(child: CircularProgressIndicator(color: FuwaColors.balletPink)),
             )
           else if (_accessories.isEmpty)
-            const SliverFillRemaining(
+            SliverFillRemaining(
+              hasScrollBody: false,
               child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(FuwaColors.ribbonSymbol, style: TextStyle(color: FuwaColors.balletPink, fontSize: 36)),
-                    SizedBox(height: 8),
-                    Text('小物箱里还没有饰品', style: TextStyle(color: FuwaColors.chocolateDark, fontWeight: FontWeight.w700)),
-                    SizedBox(height: 4),
-                    Text('KC、发带、BNT、手袖等待收纳', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 12)),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 60),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      FuwaBreathingRibbon(
+                        child: Text(
+                          FuwaColors.ribbonSymbol,
+                          style: TextStyle(color: FuwaColors.balletPink, fontSize: 48, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      SizedBox(height: 14),
+                      Text('还没有录入小物', style: TextStyle(color: FuwaColors.chocolateDark, fontSize: 16, fontWeight: FontWeight.w700)),
+                      SizedBox(height: 6),
+                      Text('点击右下角呼吸小缎带开始录入', style: TextStyle(color: FuwaColors.mutedRosyBrown, fontSize: 12, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
                 ),
               ),
             )

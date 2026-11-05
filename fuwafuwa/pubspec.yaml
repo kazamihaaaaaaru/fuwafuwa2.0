@@ -1,7 +1,7 @@
 name: fuwafuwa
 description: "A local-only Android wardrobe archive app for Sweet Lolita and daily fashion enthusiasts."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
